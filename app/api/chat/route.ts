@@ -1,0 +1,451 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { getPromptStyle, getTierLabel, getImageLimit, isMonthlyImageLimit, getLimit, pickHighestTier, getDiagnosticLimit, isMonthlyDiagnosticLimit, type Tier } from '@/lib/tiers';
+import { generateImage } from '@/lib/image-generation';
+
+// =============================================
+// TIER-AWARE SYSTEM PROMPT (now uses centralized tier config)
+// =============================================
+function getMyTechFixSystemPrompt(tier: string): string {
+  const style = getPromptStyle(tier);
+  const label = getTierLabel(tier);
+
+  const basePrompt = `You are MyTech-Fix, a helpful and practical AI assistant that specializes in tech troubleshooting, device setup, everyday IT guidance for home users and small businesses (including general awareness advice for cybersecurity events when asked).
+
+Your personality is friendly, clear, and patient. You explain things simply without being condescending.
+
+### Core Rules (Apply to ALL tiers)
+- Always try to be helpful. Never refuse to answer a question outright.
+- Focus on practical, actionable advice for troubleshooting, basic setup, common how-to tasks, and productivity.
+- You are especially strong at IoT/smart home troubleshooting, WiFi issues, computer problems, printers, and basic device connectivity.
+- Cybersecurity guidance is available but **only** provide it (and the required disclaimer) when the user specifically asks about cyber threats, incidents, or security events. Do not bring it up unprompted.
+- **Strict boundaries on security topics**: You provide only high-level, general advice. Never give detailed instructions for configuring security tools, firewalls, EDR solutions, VPNs, access controls, or production security infrastructure. Never request or accept passwords, keys, internal diagrams, or sensitive data. If a topic requires hands-on implementation or forensic work, immediately recommend professional help.
+- Keep responses clear and well-structured. Use bullet points and numbered steps when it helps.
+
+### Cybersecurity Events Guidance (Very Important)
+**Only** include cybersecurity-specific advice and the disclaimer below when the user explicitly asks about or describes a cybersecurity event, incident, threat, or related topic (e.g. phishing, malware, ransomware, account compromise, hacking, data breach, etc.).
+
+- Do **not** mention cybersecurity disclaimers in general responses, capability questions, or unrelated troubleshooting.
+- When a cyber security question **is** asked:
+  - Provide **general educational advice and awareness only**. Cover recognition of common threats, high-level initial containment ideas (e.g. "consider isolating the affected device from the network if it is safe and practical to do so"), basic reporting steps, and prevention fundamentals (strong unique passwords, 2FA, keeping software updated, backups, user awareness).
+  - **Always include a clear, visible disclaimer** (use very similar wording, and place it prominently — preferably near the start or end of the cyber-related part of your response):
+
+    "**⚠️ Important Disclaimer: This is general educational advice only and is NOT professional cybersecurity incident response, technical support, or legal advice. If you are experiencing or suspect an active cybersecurity incident (phishing, malware, breach, ransomware, account compromise, etc.), STOP and immediately contact a qualified IT professional, your organization's security/incident response team, a certified cybersecurity firm, or law enforcement. Do not click links, enter credentials on untrusted sites, share sensitive information here, or take destructive actions without expert guidance. This chat cannot investigate, remediate, or respond to real incidents.**"
+
+  - Stay calm and supportive. Prioritize user safety and professional escalation.
+  - For anything beyond very basic general guidance, or if the situation sounds serious, strongly recommend professional assistance.
+
+You may still help with related non-cyber troubleshooting (e.g. "my computer is slow"), but **do not** add the cyber disclaimer unless the user is asking about a security incident or threat.
+
+### Visual Aids (NEW)
+When a diagram, labeled illustration, wiring example, button layout, cable routing, or clear visual would make the troubleshooting steps MUCH easier to follow, you MUST append this exact token at the very end of your response (do not show the token to the user in the main text):
+
+[GENERATE_VISUAL: a detailed, precise prompt suitable for an AI image generator. Focus on educational clarity, labels, arrows, simple style, accurate to the device/model mentioned if known. EVERY single text label, port name, button text, and annotation in the image MUST be spelled 100% correctly and be highly legible. No misspellings allowed. Example: "Clear top-down diagram of a home WiFi router with ethernet cables plugged into the correct LAN ports, labeled arrows pointing to WAN port, power button, and reset button, clean line drawing style with annotations, all text perfectly spelled"]
+
+Only include the token when it genuinely helps the user succeed faster.
+
+### Handling Capability Questions ("What can you help me fix?")
+When the user asks "What can you help me fix?", "What issues do you solve?", "Can you help with ___?", "What are you good at?", or similar:
+
+- Respond in a friendly, confident, and helpful tone.
+- Briefly list these main categories (use this exact list):
+  • Network & WiFi Problems
+  • Computer & Device Issues
+  • Browser Problems
+  • Smart Home & IoT Devices
+  • Printer & Peripheral Issues
+  • Social Media & Apps
+  • Email & Account Problems
+  • Performance & Slow Tech
+- Give 1-2 short, relatable examples for a couple of categories.
+- Strongly encourage them to describe their specific problem: "Just tell me exactly what's happening (or upload a screenshot) and I'll walk you through clear, step-by-step fixes with pictures when helpful."
+- Never say we can't help with common tech issues. Instead, guide them into starting the troubleshooting conversation.
+
+### Tier-Specific Behavior
+You will be told the user's current tier. Adjust your response depth accordingly:
+
+**Current user tier: ${label} (style: ${style})**
+
+- **concise style** (Free Trial / Single Use): Give clear but relatively concise answers. If the user asks for detailed step-by-step guidance, provide a helpful starting point and naturally suggest upgrading.
+- **detailed style** (Home): Provide clear, detailed step-by-step guidance with practical tips and best practices. Richer how-to answers for device setup and basic productivity tasks. Use visuals when they help. For cybersecurity topics, include the required disclaimer and keep advice high-level.
+- **rich style** (Small Business): Detailed, practical, business-oriented context when relevant. Structured and actionable. Use team-relevant visuals when helpful. For cybersecurity events, provide more structured general guidance (e.g. team communication, basic escalation processes) while always including the strong disclaimer and recommending professional incident response services.`;
+
+  return basePrompt;
+}
+
+// =============================================
+// API ROUTE
+// =============================================
+export async function POST(request: NextRequest) {
+  try {
+    const { message, imageUrl, history, generateVisualPrompt } = await request.json();
+
+    // Create Supabase server client
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    // Get authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Fetch user's tier: always consider both sources and pick the highest rank (resilient to
+    // profiles vs user_tiers drift after upgrades/webhooks). Profiles still preferred for display
+    // in other UIs, but for AI behavior we want the best available plan.
+    let userTier: Tier = 'free_trial';
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('tier')
+        .eq('id', user.id)
+        .maybeSingle();
+      const { data: ut } = await supabase
+        .from('user_tiers')
+        .select('tier')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      const p = prof?.tier as Tier | undefined;
+      const u = ut?.tier as Tier | undefined;
+      userTier = pickHighestTier(p, u);
+    } catch {}
+
+    // Fetch full current usage/credits so the AI can accurately answer questions like
+    // "how many credits do I have left?", "how many chats/images left?", etc.
+    let sessionsUsed = 0;
+    let imagesUsed = 0;
+    let diagnosticsUsed = 0;
+    let imageLimit = 0;
+    let diagnosticLimit = 0;
+    let chatLimit = 0;
+    let imageResetDate: string | null = null;
+    let diagnosticResetDate: string | null = null;
+
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('sessions_used, images_used, diagnostics_used, image_reset_date, diagnostic_reset_date')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const { data: ut } = await supabase
+        .from('user_tiers')
+        .select('sessions_used, images_used, diagnostics_used, image_reset_date, diagnostic_reset_date')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      sessionsUsed = (prof?.sessions_used ?? ut?.sessions_used) || 0;
+      imagesUsed = (prof?.images_used ?? ut?.images_used) || 0;
+      diagnosticsUsed = (prof?.diagnostics_used ?? ut?.diagnostics_used) || 0;
+      imageResetDate = prof?.image_reset_date ?? ut?.image_reset_date ?? null;
+      diagnosticResetDate = prof?.diagnostic_reset_date ?? ut?.diagnostic_reset_date ?? null;
+
+      chatLimit = getLimit(userTier);
+      imageLimit = getImageLimit(userTier);
+      diagnosticLimit = getDiagnosticLimit(userTier);
+    } catch (usageErr) {
+      console.warn('Non-fatal: could not load usage numbers for AI prompt', usageErr);
+    }
+
+    const chatRemaining = chatLimit === 9999 ? 'Unlimited' : Math.max(0, chatLimit - sessionsUsed);
+    const imageRemaining = Math.max(0, imageLimit - imagesUsed);
+    const diagnosticRemaining = Math.max(0, diagnosticLimit - diagnosticsUsed);
+
+    // Direct visual generation path (used by "Generate visual aid" button)
+    if (generateVisualPrompt && typeof generateVisualPrompt === 'string') {
+      const visualUrl = await generateImage(generateVisualPrompt);
+      if (visualUrl) {
+        return NextResponse.json({
+          reply: "Here's a generated visual aid to help with your troubleshooting:",
+          imageUrl: visualUrl,
+        });
+      }
+      // Fallback if generation failed
+      return NextResponse.json({
+        reply: "I tried to generate a visual but ran into an issue. Here's the text guidance instead:",
+      });
+    }
+
+    // === SERVER-SIDE CHAT SESSIONS LIMIT ENFORCEMENT (authoritative source of truth) ===
+    // Normal chat turns (not the pure visual gen helper) are counted here.
+    // Client does fast pre-check too; this prevents bypass and ensures count is accurate.
+    try {
+      let pTier: string | null = null;
+      let pUsed = 0;
+      let uTier: string | null = null;
+      let uUsed = 0;
+
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('tier, sessions_used')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (prof) {
+        pTier = prof.tier;
+        pUsed = prof.sessions_used || 0;
+      }
+
+      const { data: ut } = await supabase
+        .from('user_tiers')
+        .select('tier, sessions_used')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (ut) {
+        uTier = ut.tier;
+        uUsed = ut.sessions_used || 0;
+      }
+
+      const resolvedTier = pickHighestTier(pTier, uTier);
+      const used = pUsed || uUsed;
+      const lim = getLimit(resolvedTier);
+
+      if (lim < 9999 && used >= lim) {
+        return NextResponse.json(
+          {
+            error: `You've reached the maximum of ${lim} chats for your current plan. Upgrade for unlimited chats and more features.`,
+            code: 'CHAT_LIMIT'
+          },
+          { status: 402 }
+        );
+      }
+
+      // Increment usage for this turn. Sync both tables for resilience (like image + diag flows)
+      const newUsed = used + 1;
+      const now = new Date().toISOString();
+      try {
+        await supabase
+          .from('profiles')
+          .update({ sessions_used: newUsed, updated_at: now })
+          .eq('id', user.id);
+
+        await supabase
+          .from('user_tiers')
+          .upsert({
+            user_id: user.id,
+            tier: resolvedTier,
+            sessions_used: newUsed,
+            updated_at: now,
+          });
+      } catch (incErr) {
+        console.warn('Non-fatal: failed to increment sessions_used (chat will still be processed):', incErr);
+      }
+    } catch (chkErr) {
+      console.warn('Non-fatal chat sessions limit check error (allowing request):', chkErr);
+    }
+
+    // Build tier-aware system prompt + current usage so the AI can answer quota questions accurately
+    const baseSystemPrompt = getMyTechFixSystemPrompt(userTier);
+
+    const usageInfo = `
+
+### Your Current Credits / Usage (exact live numbers)
+When the user asks anything like "how many credits do I have left?", "how many chats/images/diagnostics left?", "what's my remaining quota?", "how much usage do I have?", use these precise values:
+
+- Chat / troubleshooting sessions: ${sessionsUsed} used — ${chatRemaining} remaining (plan limit: ${chatLimit === 9999 ? 'Unlimited' : chatLimit})
+- AI Image / Visual generation credits: ${imagesUsed} used — ${imageRemaining} remaining this period (plan limit: ${imageLimit})
+- Automated Diagnostics runs: ${diagnosticsUsed} used — ${diagnosticRemaining} remaining this period (plan limit: ${diagnosticLimit})
+
+${imageResetDate ? `- Image quota next resets: ${new Date(imageResetDate).toLocaleDateString()}` : ''}
+${diagnosticResetDate ? `- Diagnostics quota next resets: ${new Date(diagnosticResetDate).toLocaleDateString()}` : ''}
+
+Be direct and accurate. Example good answer: "You have 12 chats and 7 image credits left this period."`;
+
+    const systemPrompt = baseSystemPrompt + usageInfo;
+
+    // Prepare messages for Grok
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...(history || []),
+    ];
+
+    // Add current user message (handle image if present)
+    if (imageUrl) {
+      messages.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: message || "Please analyze this image" },
+          { type: 'image_url', image_url: { url: imageUrl } }
+        ]
+      });
+    } else {
+      messages.push({
+        role: 'user',
+        content: message
+      });
+    }
+
+    // Call Grok API
+    const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROK_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'grok-3-latest',
+        messages,
+        temperature: 0.7,
+        max_tokens: 1500,
+      }),
+    });
+
+    if (!grokResponse.ok) {
+      const errorText = await grokResponse.text();
+      console.error('Grok API error:', errorText);
+
+      const status = grokResponse.status;
+      let code = 'GROK_ERROR';
+      let message = 'Our AI helper is temporarily unavailable.';
+
+      if (status === 429) {
+        code = 'GROK_RATE_LIMIT';
+        message = 'AI rate limit reached. Please wait a moment and try again.';
+      } else if (status === 401 || status === 403) {
+        code = 'GROK_AUTH_ERROR';
+        message = 'AI service configuration issue.';
+      }
+
+      return NextResponse.json(
+        { error: message, code, provider: 'grok' },
+        { status: status >= 500 ? 502 : status }
+      );
+    }
+
+    const data = await grokResponse.json();
+    let replyText: string = data.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
+    let generatedImageUrl: string | null = null;
+
+    // === AI IMAGE GENERATION SUPPORT (automatic when helpful) ===
+    const visualTokenMatch = replyText.match(/\[GENERATE_VISUAL:\s*([^\]]+)\]/i);
+    if (visualTokenMatch && visualTokenMatch[1]) {
+      const visualPrompt = visualTokenMatch[1].trim();
+
+      // Fetch for limit enforcement using highest tier + usage from either source
+      let profileData: any = null;
+      let t1: string | null = null;
+      let t2: string | null = null;
+      try {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('tier, images_used, image_reset_date')
+          .eq('id', user.id)
+          .maybeSingle();
+        const { data: ut } = await supabase
+          .from('user_tiers')
+          .select('tier, images_used, image_reset_date')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        profileData = prof || ut; // for numbers, prefer prof if present
+        if (prof && ut) {
+          // still pick for tier
+          t1 = prof.tier; t2 = ut.tier;
+        } else if (prof) {
+          t1 = prof.tier;
+        } else if (ut) {
+          t1 = ut.tier;
+        }
+      } catch {}
+      const userTier = (t1 as Tier) || (t2 as Tier) || 'free_trial';
+      const imageLimit = getImageLimit(userTier);
+      const monthly = isMonthlyImageLimit(userTier);
+      let used = profileData?.images_used || 0;
+
+      // Reset logic for monthly tiers
+      if (monthly && profileData?.image_reset_date && new Date(profileData.image_reset_date) < new Date()) {
+        const newReset = new Date();
+        newReset.setMonth(newReset.getMonth() + 1);
+        try {
+          await supabase.from('profiles').update({ images_used: 0, image_reset_date: newReset.toISOString() }).eq('id', user.id);
+
+          // Also reset user_tiers for sync (use upsert for safety)
+          await supabase.from('user_tiers').upsert({
+            user_id: user.id,
+            tier: userTier,
+            images_used: 0,
+            image_reset_date: newReset.toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        } catch (resetErr) {
+          console.warn('Non-fatal reset error during visual gen:', resetErr);
+        }
+
+        used = 0;
+      }
+
+      if (used >= imageLimit) {
+        // Hit limit - don't generate, inform user in reply
+        replyText = replyText.replace(/\[GENERATE_VISUAL:\s*[^\]]+\]/i, '').trim();
+        replyText += `\n\n[Image limit reached: You have used ${used}/${imageLimit} images this period. Upgrade or buy more images to generate additional visuals.]`;
+      } else {
+        // Generate
+        generatedImageUrl = await generateImage(visualPrompt);
+
+        replyText = replyText.replace(/\[GENERATE_VISUAL:\s*[^\]]+\]/i, '').trim();
+
+        if (generatedImageUrl) {
+          // Increment usage
+          try {
+            await supabase
+              .from('profiles')
+              .update({ images_used: used + 1, updated_at: new Date().toISOString() })
+              .eq('id', user.id);
+
+            // Sync to user_tiers (upsert creates row if a user somehow has no user_tiers row yet)
+            await supabase
+              .from('user_tiers')
+              .upsert({
+                user_id: user.id,
+                tier: userTier,
+                images_used: used + 1,
+                updated_at: new Date().toISOString(),
+              });
+          } catch (incErr) {
+            console.warn('Non-fatal: failed to increment image usage after visual gen:', incErr);
+          }
+
+          if (!/visual|diagram|image|illustration|picture/i.test(replyText)) {
+            replyText += '\n\n(Helpful visual generated below.)';
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({
+      reply: replyText,
+      imageUrl: generatedImageUrl,
+    });
+
+  } catch (error: any) {
+    console.error('Chat API error:', error);
+
+    // Distinguish common failure modes for better client UX
+    if (error?.message?.includes('fetch')) {
+      return NextResponse.json(
+        { error: 'Network error talking to AI. Check your connection.', code: 'NETWORK_ERROR' },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Something went wrong on our end. Please try again.', code: 'INTERNAL_ERROR' },
+      { status: 500 }
+    );
+  }
+}
