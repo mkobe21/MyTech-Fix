@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ArrowLeft, Clock, Search, ArrowUpDown, Download, Trash2, Activity, Filter } from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -372,33 +371,32 @@ export default function DiagnosticRunsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation - Premium Glass (same style as /history) */}
-      <nav className="border-b border-white/10 bg-background/70 backdrop-blur-xl sticky top-0 z-50">
+      {/* Top Navigation */}
+      <nav className="border-b border-white/[0.07] bg-[#0A0F1E]/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/dashboard" className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-100 transition-colors">
               <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+              Dashboard
             </Link>
-            <div className="h-5 w-px bg-white/10" />
+            <div className="h-5 w-px bg-white/[0.07]" />
             <div className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
+              <Activity className="h-5 w-5 text-blue-400" />
               <div>
-                <h1 className="text-xl font-semibold tracking-tight">Diagnostic Runs</h1>
-                <p className="text-xs text-muted-foreground">Complete history of your network health checks</p>
+                <h1 className="font-sora text-lg font-bold text-slate-50 tracking-tight">Diagnostic Runs</h1>
+                <p className="text-xs text-slate-500">Network health check history</p>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <ThemeToggle />
             <Button
               onClick={startNewDiagnostic}
-              className="btn-premium bg-primary hover:bg-primary/90 gap-2"
+              className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl gap-2"
               disabled={isRunningDiagnostic}
             >
               <Activity className="h-4 w-4" />
-              Run New Diagnostic
+              Run New
             </Button>
           </div>
         </div>

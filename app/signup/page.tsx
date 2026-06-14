@@ -138,22 +138,22 @@ function SignupContent() {
 
       <div className="max-w-md mx-auto px-6 py-20">
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-semibold mb-3">Create Your Account</h1>
-          <p className="text-xl font-medium text-blue-600">
+          <h1 className="font-sora text-4xl font-bold text-slate-50 mb-3">Create Your Account</h1>
+          <p className="text-xl font-semibold text-blue-400">
             {planInfo.name} — ${planInfo.price}
           </p>
-          <p className="text-zinc-600 mt-1">{planInfo.desc}</p>
+          <p className="text-slate-400 mt-1">{planInfo.desc}</p>
         </div>
 
-        <div className="card-premium border-white/10 rounded-3xl p-8">
+        <div className="rounded-2xl border border-white/[0.07] bg-gray-900 p-8">
           {freeTrialBlocked && (
-            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-              <p className="font-semibold text-amber-800">Free trial already claimed</p>
-              <p className="mt-1 text-sm text-amber-700">
+            <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
+              <p className="font-semibold text-amber-300">Free trial already claimed</p>
+              <p className="mt-1 text-sm text-amber-400/80">
                 This email has already used the free trial. Please select a paid plan to continue.
               </p>
               <Link href="/pricing" className="mt-4 inline-block">
-                <Button variant="outline" size="sm" className="border-amber-300 text-amber-700 hover:bg-amber-100">
+                <Button variant="outline" size="sm" className="border-amber-500/30 text-amber-300 hover:bg-amber-500/10">
                   View Pricing Plans
                 </Button>
               </Link>
@@ -165,10 +165,10 @@ function SignupContent() {
             <div className="mb-6">
               <div className="mb-4">
                 <h3 className="font-semibold">Tell us about your business</h3>
-                <p className="text-sm text-zinc-600">This helps us set up your team workspace.</p>
+                <p className="text-sm text-slate-400">This helps us set up your team workspace.</p>
               </div>
               <BusinessOnboarding onComplete={(data) => setBusinessData(data)} />
-              <div className="mt-4 text-xs text-zinc-500">You can update these details later in Team Settings.</div>
+              <div className="mt-4 text-xs text-slate-500">You can update these details later in Team Settings.</div>
             </div>
           )}
 
@@ -211,13 +211,13 @@ function SignupContent() {
 
             {/* Password Requirements */}
             <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <div className="text-sm font-medium text-zinc-700 mb-3">Password must contain:</div>
+              <div className="text-sm font-medium text-slate-300 mb-3">Password must contain:</div>
               <ul className="space-y-1.5 text-sm">
                 {passwordRequirements.map((req, index) => {
                   const isMet = req.test(password);
                   return (
-                    <li key={index} className={`flex items-center gap-2 ${isMet ? 'text-green-600' : 'text-zinc-600'}`}>
-                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${isMet ? 'bg-green-500' : 'bg-white/20'}`} />
+                    <li key={index} className={`flex items-center gap-2 ${isMet ? 'text-emerald-400' : 'text-slate-500'}`}>
+                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${isMet ? 'bg-emerald-500' : 'bg-white/20'}`} />
                       {req.label}
                     </li>
                   );
@@ -242,8 +242,8 @@ function SignupContent() {
           </div>
         </div>
 
-        <p className="text-center text-sm text-zinc-500 mt-8">
-          Already have an account? <Link href="/chat" className="text-blue-600 hover:underline">Sign in here</Link>
+        <p className="text-center text-sm text-slate-500 mt-8">
+          Already have an account? <Link href="/chat" className="text-blue-400 hover:text-blue-300 hover:underline">Sign in here</Link>
         </p>
       </div>
     </div>

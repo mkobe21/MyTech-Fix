@@ -26,6 +26,8 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // react-markdown v10 is ESM-only; Next.js needs to transpile it
+  transpilePackages: ['react-markdown'],
   // Optimize common deps
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog'],

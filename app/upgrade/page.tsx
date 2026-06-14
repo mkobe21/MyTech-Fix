@@ -65,31 +65,31 @@ function UpgradeContent() {
       <Navbar />
 
       <div className="max-w-lg mx-auto px-6 py-20 text-center">
-        <h1 className="text-4xl font-semibold mb-3">Upgrade Your Plan</h1>
-        <p className="text-zinc-600 mb-10">
-          You're upgrading to: <strong>{selectedPlan.name}</strong>
+        <h1 className="font-sora text-4xl font-bold text-slate-50 mb-3">Upgrade Your Plan</h1>
+        <p className="text-slate-400 mb-10">
+          You&apos;re upgrading to: <strong className="text-slate-200">{selectedPlan.name}</strong>
         </p>
 
-        <Card className="mb-10">
-          <CardContent className="p-10">
-            <div className="text-6xl font-bold mb-2">${selectedPlan.price}</div>
-            <p className="text-zinc-500 mb-8">{selectedPlan.desc}</p>
+        <div className="rounded-2xl border border-white/[0.07] bg-gray-900 mb-10">
+          <div className="p-10">
+            <div className="font-sora text-6xl font-bold text-slate-50 mb-2">${selectedPlan.price}</div>
+            <p className="text-slate-400 mb-8">{selectedPlan.desc}</p>
 
-            <Button 
-              onClick={handleUpgrade} 
+            <Button
+              onClick={handleUpgrade}
               disabled={loading}
-              className="w-full py-8 text-xl"
+              className="w-full py-8 text-xl bg-blue-500 hover:bg-blue-600 text-white rounded-xl"
             >
               {loading ? "Processing Upgrade..." : `Upgrade to ${selectedPlan.name}`}
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-slate-500">
           You can change or cancel your plan anytime from your dashboard.
         </p>
 
-        <Link href="/pricing" className="text-blue-600 hover:underline block mt-8">
+        <Link href="/pricing" className="text-blue-400 hover:text-blue-300 hover:underline block mt-8">
           ← Back to Pricing
         </Link>
       </div>

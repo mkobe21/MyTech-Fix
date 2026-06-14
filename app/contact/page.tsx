@@ -55,7 +55,7 @@ export default function Contact() {
           <div className="card-premium rounded-3xl p-10">
             <h2 className="text-2xl font-semibold mb-3">Business &amp; Team Inquiries</h2>
             <p className="text-muted-foreground mb-6">
-              Interested in Business or Business Pro plans for your organization?
+              Interested in Business or Business Plus plans for your organization?
             </p>
             <a 
               href="mailto:business@mytech-fix.com" 

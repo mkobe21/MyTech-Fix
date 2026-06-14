@@ -189,14 +189,14 @@ export default function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   </div>
 
                   {/* Password Requirements Checklist */}
-                  <div className="rounded-lg bg-zinc-50 p-3 text-sm">
-                    <div className="font-medium text-zinc-700 mb-2 text-xs">Password requirements:</div>
+                  <div className="rounded-lg bg-white/5 border border-white/[0.07] p-3 text-sm">
+                    <div className="font-medium text-slate-400 mb-2 text-xs">Password requirements:</div>
                     <ul className="space-y-1">
                       {passwordRequirements.map((req, index) => {
                         const isMet = req.test(password);
                         return (
-                          <li key={index} className={`flex items-center gap-2 text-xs ${isMet ? 'text-green-600' : 'text-zinc-600'}`}>
-                            <span className={`inline-block w-1 h-1 rounded-full ${isMet ? 'bg-green-500' : 'bg-zinc-300'}`} />
+                          <li key={index} className={`flex items-center gap-2 text-xs ${isMet ? 'text-emerald-400' : 'text-slate-500'}`}>
+                            <span className={`inline-block w-1 h-1 rounded-full ${isMet ? 'bg-emerald-500' : 'bg-white/20'}`} />
                             {req.label}
                           </li>
                         );
@@ -214,7 +214,7 @@ export default function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
           {mode === 'signIn' && !forgotMode && (
             <button
               onClick={() => setForgotMode(true)}
-              className="text-sm text-blue-600 hover:underline text-left w-full"
+              className="text-sm text-blue-400 hover:text-blue-300 hover:underline text-left w-full"
             >
               Forgot your password?
             </button>
@@ -222,9 +222,9 @@ export default function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
 
           {mode === 'signUp' && freeTrialBlocked ? (
             <div className="space-y-3">
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
-                <p className="font-medium text-amber-800">Free trial already used</p>
-                <p className="text-amber-700 mt-1">
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
+                <p className="font-medium text-amber-300">Free trial already used</p>
+                <p className="text-amber-400/80 mt-1">
                   This email has already claimed a free trial. Please choose a paid plan to continue.
                 </p>
               </div>
@@ -244,7 +244,7 @@ export default function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   setPassword('');
                   setConfirmPassword('');
                 }}
-                className="text-sm text-blue-600 hover:underline w-full"
+                className="text-sm text-blue-400 hover:text-blue-300 hover:underline w-full"
               >
                 Try a different email
               </button>

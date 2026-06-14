@@ -5,7 +5,7 @@
  * IMPORTANT: This is the ONLY place limits and labels should be defined.
  */
 
-export type Tier = 'free_trial' | 'single_use' | 'home' | 'business' | 'business_plus';
+export type Tier = 'free_trial' | 'single_use' | 'home' | 'home_pro' | 'business' | 'business_plus';
 
 export interface TierConfig {
   key: Tier;
@@ -24,58 +24,77 @@ export const TIERS: Record<Tier, TierConfig> = {
   free_trial: {
     key: 'free_trial',
     label: 'Free Trial',
-    limit: 5,
-    imageLimit: 1,
+    limit: 3,
+    imageLimit: 0,
     diagnosticLimit: 1,
     price: '0',
     period: 'one-time',
     features: [
-      '5 troubleshooting sessions',
-      'Basic IoT & device help',
-      'Image analysis',
-      'Limited how-to guidance',
-      '1 AI-generated image total',
-      '1 automated diagnostic run (speed, latency, packet loss, DNS, WiFi + WiFi Channel Scanner / interference analysis + MyTech-Fix AI analysis)',
-      'General cybersecurity event awareness and high-level guidance (with professional referral)',
+      '3 troubleshooting sessions',
+      'Basic device & IoT help',
+      'Image & screenshot analysis',
+      '1 automated diagnostic run',
+      'General cybersecurity guidance (with professional referral)',
     ],
     promptStyle: 'concise',
   },
   single_use: {
     key: 'single_use',
-    label: 'Single Use',
-    limit: 10,
-    imageLimit: 3,
-    diagnosticLimit: 3,
-    price: '9.99',
-    period: 'per session',
+    label: 'Quick Fix Pack',
+    limit: 5,
+    imageLimit: 1,
+    diagnosticLimit: 1,
+    price: '7.99',
+    period: 'one-time',
     features: [
-      '10 troubleshooting sessions',
+      '5 troubleshooting sessions',
       'Full IoT & smart home support',
-      'Image analysis included',
-      '3 AI-generated images total',
-      'Basic productivity help',
-      '3 automated diagnostic runs (speed, latency, packet loss, DNS, WiFi + WiFi Channel Scanner / interference analysis + MyTech-Fix AI analysis)',
-      'General cybersecurity event awareness and high-level guidance (with professional referral)',
+      'Image & screenshot analysis',
+      '1 AI-generated diagram',
+      '1 automated diagnostic run',
+      'General cybersecurity guidance (with professional referral)',
     ],
     promptStyle: 'concise',
   },
   home: {
     key: 'home',
-    label: 'Home Plan',
-    limit: 30,
+    label: 'Home',
+    limit: 9999,
     imageLimit: 10,
     diagnosticLimit: 10,
     price: '9.99',
     period: 'per month',
+    description: 'Best for individuals & families',
     features: [
-      '30 chats per month',
-      'Unlimited image analysis',
-      '10 AI-generated images per month (diagrams, visuals, layouts)',
+      'Unlimited chats',
+      'Image & screenshot analysis',
+      '10 AI-generated diagrams / month',
+      '10 automated diagnostics / month',
       'Detailed how-to guidance',
       'Productivity app support (Excel, Word)',
-      'Priority responses',
-      '10 automated diagnostic runs per month (speed, latency, packet loss, DNS, WiFi + WiFi Channel Scanner / interference analysis + MyTech-Fix AI analysis)',
-      'General cybersecurity event guidance and awareness (with professional referral)',
+      'Full chat history',
+      'General cybersecurity guidance (with professional referral)',
+    ],
+    promptStyle: 'detailed',
+  },
+  home_pro: {
+    key: 'home_pro',
+    label: 'Home Pro',
+    limit: 9999,
+    imageLimit: 30,
+    diagnosticLimit: 30,
+    price: '19.99',
+    period: 'per month',
+    description: 'Power users & home offices',
+    features: [
+      'Unlimited chats',
+      'Image & screenshot analysis',
+      '30 AI-generated diagrams / month',
+      '30 automated diagnostics / month',
+      'Priority AI responses',
+      'Productivity app support (Excel, Word)',
+      'Full chat history + CSV export',
+      'General cybersecurity guidance (with professional referral)',
     ],
     promptStyle: 'detailed',
   },
@@ -87,45 +106,41 @@ export const TIERS: Record<Tier, TierConfig> = {
     diagnosticLimit: 50,
     price: '29.99',
     period: 'per month',
-    description: 'IT Support for up to 5 Team Members',
+    description: 'IT support for up to 5 team members',
     features: [
-      'Up to 5 team members',
+      'Up to 5 seats',
       'Unlimited chats for the whole team',
-      'Team accounts & shared conversation history',
-      'Business device inventory & tagging',
+      'Shared history & device inventory',
+      '50 AI-generated diagrams / month',
+      '50 automated diagnostics / month',
+      'Admin dashboard & usage reports',
+      'Multi-location support',
       'Advanced productivity + workflow assistance',
-      '50 AI-generated images per month (diagrams, wiring, layouts)',
-      'Priority + faster AI responses',
-      'Admin dashboard with usage reports',
-      'Multi-location & department support',
-      '50 automated diagnostic runs per month (speed, latency, packet loss, DNS, WiFi + WiFi Channel Scanner / interference analysis + MyTech-Fix AI analysis)',
-      'General cybersecurity event guidance, awareness, and team-oriented response basics (always with strong professional referral)',
+      'General cybersecurity guidance (with professional referral)',
     ],
     promptStyle: 'rich',
   },
   business_plus: {
     key: 'business_plus',
-    label: 'Small Business Plus',
+    label: 'Business Plus',
     limit: 9999,
-    imageLimit: 100,
-    diagnosticLimit: 100,
-    price: '59.99',
+    imageLimit: 150,
+    diagnosticLimit: 150,
+    price: '49.99',
     period: 'per month',
-    description: 'IT Support for up to 15 Team Members',
+    description: 'IT support for up to 15 team members',
     features: [
-      'Up to 15 team members',
+      'Up to 15 seats',
       'Unlimited chats for the whole team',
-      'Team accounts & shared conversation history',
-      'Business device inventory & tagging',
-      'Advanced productivity + workflow assistance',
-      '100 AI-generated images per month (diagrams, wiring, layouts)',
-      'Priority + faster AI responses',
-      'Admin dashboard with usage reports',
-      'Multi-location & department support',
+      'Shared history & device inventory',
+      '150 AI-generated diagrams / month',
+      '150 automated diagnostics / month',
+      'Admin dashboard & usage reports',
       'Usage analytics per team member',
+      'Multi-location support',
       'Export conversation history',
-      '100 automated diagnostic runs per month (speed, latency, packet loss, DNS, WiFi + WiFi Channel Scanner / interference analysis + MyTech-Fix AI analysis)',
-      'General cybersecurity event guidance, awareness, and team-oriented response basics (always with strong professional referral)',
+      'Advanced productivity + workflow assistance',
+      'General cybersecurity guidance (with professional referral)',
     ],
     promptStyle: 'rich',
   },
@@ -158,7 +173,7 @@ export function getPromptStyle(tier: string | null | undefined): TierConfig['pro
 
 /** Is this a paid recurring plan? */
 export function isPaidPlan(tier: string | null | undefined): boolean {
-  return tier === 'home' || tier === 'business' || tier === 'business_plus';
+  return tier === 'home' || tier === 'home_pro' || tier === 'business' || tier === 'business_plus';
 }
 
 /** Should we show upgrade CTAs for this tier? */
@@ -171,6 +186,7 @@ export const PRICING_PLAN_TO_TIER: Record<string, Tier> = {
   free: 'free_trial',
   single: 'single_use',
   home: 'home',
+  home_pro: 'home_pro',
   business: 'business',
   business_plus: 'business_plus',
 };
@@ -181,6 +197,7 @@ export function getPricingPlanKey(tier: Tier): string {
     free_trial: 'free',
     single_use: 'single',
     home: 'home',
+    home_pro: 'home_pro',
     business: 'business',
     business_plus: 'business_plus',
   };
@@ -196,7 +213,7 @@ export function getImageLimit(tier: string | null | undefined): number {
 /** Whether the tier uses monthly resets (subscriptions) or lifetime total (one-time) */
 export function isMonthlyImageLimit(tier: string | null | undefined): boolean {
   const t = (tier as Tier) || 'free_trial';
-  return ['home', 'business', 'business_plus'].includes(t);
+  return ['home', 'home_pro', 'business', 'business_plus'].includes(t);
 }
 
 /** Get the automated diagnostics run limit for a tier */
@@ -208,7 +225,7 @@ export function getDiagnosticLimit(tier: string | null | undefined): number {
 /** Whether the tier uses monthly resets for diagnostics (subscriptions) or lifetime total (one-time) */
 export function isMonthlyDiagnosticLimit(tier: string | null | undefined): boolean {
   const t = (tier as Tier) || 'free_trial';
-  return ['home', 'business', 'business_plus'].includes(t);
+  return ['home', 'home_pro', 'business', 'business_plus'].includes(t);
 }
 
 /** Image pack products for "Buy More Images" (one-time Stripe purchases) */
@@ -225,8 +242,9 @@ const TIER_RANK: Record<Tier, number> = {
   free_trial: 0,
   single_use: 1,
   home: 2,
-  business: 3,
-  business_plus: 4,
+  home_pro: 3,
+  business: 4,
+  business_plus: 5,
 };
 
 /** Pick the highest tier from two (possibly null) sources. Used for resilient display + gating. */

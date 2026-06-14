@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
           const tierMap: Record<string, string> = {
             single: 'single_use',
             home: 'home',
+            home_pro: 'home_pro',
             business: 'business',
             business_plus: 'business_plus',
           };

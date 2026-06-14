@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { getPromptStyle, getTierLabel, getImageLimit, isMonthlyImageLimit, getLimit, pickHighestTier, getUserTierAndUsage, type Tier } from '@/lib/tiers';
+import { getPromptStyle, getTierLabel, getLimit, pickHighestTier, getUserTierAndUsage, type Tier } from '@/lib/tiers';
 import { generateImage } from '@/lib/image-generation';
 import { formatDiagnosticReportForChat } from '@/lib/diagnostics';
 
@@ -39,12 +39,8 @@ Your personality is friendly, clear, and patient. You explain things simply with
 
 You may still help with related non-cyber troubleshooting (e.g. "my computer is slow"), but **do not** add the cyber disclaimer unless the user is asking about a security incident or threat.
 
-### Visual Aids (NEW)
-When a diagram, labeled illustration, wiring example, button layout, cable routing, or clear visual would make the troubleshooting steps MUCH easier to follow, you MUST append this exact token at the very end of your response (do not show the token to the user in the main text):
-
-[GENERATE_VISUAL: a detailed, precise prompt suitable for an AI image generator. Focus on educational clarity, labels, arrows, simple style, accurate to the device/model mentioned if known. EVERY single text label, port name, button text, and annotation in the image MUST be spelled 100% correctly and be highly legible. No misspellings allowed. Example: "Clear top-down diagram of a home WiFi router with ethernet cables plugged into the correct LAN ports, labeled arrows pointing to WAN port, power button, and reset button, clean line drawing style with annotations, all text perfectly spelled"]
-
-Only include the token when it genuinely helps the user succeed faster.
+### Visual Aids
+You can describe steps clearly in text. The user has a "Generate visual aid" button in the chat interface they can use to request an AI-generated diagram at any time.
 
 ### Handling Capability Questions ("What can you help me fix?")
 When the user asks "What can you help me fix?", "What issues do you solve?", "Can you help with ___?", "What are you good at?", or similar:
@@ -80,7 +76,7 @@ You will be told the user's current tier. Adjust your response depth accordingly
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    const { message, imageUrl, history, generateVisualPrompt, diagnosticContext } = await request.json();
+    const { message, imageUrl, history, generateVisualPrompt, diagnosticContext, deviceContext } = await request.json();
 
     // Create Supabase server client
     const cookieStore = await cookies();
@@ -264,6 +260,14 @@ Be direct and accurate. Example good answer: "You have 12 chats and 7 image cred
       }
     }
 
+    // === DEVICE CONTEXT INJECTION (from inventory "Troubleshoot" button) ===
+    if (deviceContext && deviceContext.name) {
+      const parts = [`Device name: ${deviceContext.name}`];
+      if (deviceContext.type) parts.push(`Device type: ${deviceContext.type}`);
+      if (deviceContext.location) parts.push(`Location: ${deviceContext.location}`);
+      systemPrompt = systemPrompt + `\n\n### Device Being Troubleshot\nThe user is troubleshooting a specific device from their business inventory. Tailor your guidance to this device context and reference it naturally in your responses:\n${parts.join('\n')}`;
+    }
+
     // Prepare messages for Grok
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -325,107 +329,11 @@ Be direct and accurate. Example good answer: "You have 12 chats and 7 image cred
 
     const data = await grokResponse.json();
     let replyText: string = data.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
-    let generatedImageUrl: string | null = null;
 
-    // === AI IMAGE GENERATION SUPPORT (automatic when helpful) ===
-    const visualTokenMatch = replyText.match(/\[GENERATE_VISUAL:\s*([^\]]+)\]/i);
-    if (visualTokenMatch && visualTokenMatch[1]) {
-      const visualPrompt = visualTokenMatch[1].trim();
+    // Strip any stray [GENERATE_VISUAL: ...] tokens the model might emit despite the prompt change
+    replyText = replyText.replace(/\[GENERATE_VISUAL:\s*[^\]]+\]/gi, '').trim();
 
-      // Fetch for limit enforcement using highest tier + usage from either source
-      let profileData: any = null;
-      let t1: string | null = null;
-      let t2: string | null = null;
-      try {
-        const { data: prof } = await supabase
-          .from('profiles')
-          .select('tier, images_used, image_reset_date')
-          .eq('id', user.id)
-          .maybeSingle();
-        const { data: ut } = await supabase
-          .from('user_tiers')
-          .select('tier, images_used, image_reset_date')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        profileData = prof || ut; // for numbers, prefer prof if present
-        if (prof && ut) {
-          // still pick for tier
-          t1 = prof.tier; t2 = ut.tier;
-        } else if (prof) {
-          t1 = prof.tier;
-        } else if (ut) {
-          t1 = ut.tier;
-        }
-      } catch {}
-      const userTier = (t1 as Tier) || (t2 as Tier) || 'free_trial';
-      const imageLimit = getImageLimit(userTier);
-      const monthly = isMonthlyImageLimit(userTier);
-      let used = profileData?.images_used || 0;
-
-      // Reset logic for monthly tiers
-      if (monthly && profileData?.image_reset_date && new Date(profileData.image_reset_date) < new Date()) {
-        const newReset = new Date();
-        newReset.setMonth(newReset.getMonth() + 1);
-        try {
-          await supabase.from('profiles').update({ images_used: 0, image_reset_date: newReset.toISOString() }).eq('id', user.id);
-
-          // Also reset user_tiers for sync (use upsert for safety)
-          await supabase.from('user_tiers').upsert({
-            user_id: user.id,
-            tier: userTier,
-            images_used: 0,
-            image_reset_date: newReset.toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-        } catch (resetErr) {
-          console.warn('Non-fatal reset error during visual gen:', resetErr);
-        }
-
-        used = 0;
-      }
-
-      if (used >= imageLimit) {
-        // Hit limit - don't generate, inform user in reply
-        replyText = replyText.replace(/\[GENERATE_VISUAL:\s*[^\]]+\]/i, '').trim();
-        replyText += `\n\n[Image limit reached: You have used ${used}/${imageLimit} images this period. Upgrade or buy more images to generate additional visuals.]`;
-      } else {
-        // Generate
-        generatedImageUrl = await generateImage(visualPrompt);
-
-        replyText = replyText.replace(/\[GENERATE_VISUAL:\s*[^\]]+\]/i, '').trim();
-
-        if (generatedImageUrl) {
-          // Increment usage
-          try {
-            await supabase
-              .from('profiles')
-              .update({ images_used: used + 1, updated_at: new Date().toISOString() })
-              .eq('id', user.id);
-
-            // Sync to user_tiers (upsert creates row if a user somehow has no user_tiers row yet)
-            await supabase
-              .from('user_tiers')
-              .upsert({
-                user_id: user.id,
-                tier: userTier,
-                images_used: used + 1,
-                updated_at: new Date().toISOString(),
-              });
-          } catch (incErr) {
-            console.warn('Non-fatal: failed to increment image usage after visual gen:', incErr);
-          }
-
-          if (!/visual|diagram|image|illustration|picture/i.test(replyText)) {
-            replyText += '\n\n(Helpful visual generated below.)';
-          }
-        }
-      }
-    }
-
-    return NextResponse.json({
-      reply: replyText,
-      imageUrl: generatedImageUrl,
-    });
+    return NextResponse.json({ reply: replyText });
 
   } catch (error: any) {
     console.error('Chat API error:', error);

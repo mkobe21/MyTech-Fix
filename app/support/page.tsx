@@ -67,7 +67,7 @@ export default function SupportPage() {
               <div className="faq-item">
                 <h3>How does team sharing work?</h3>
                 <p>
-                  On Business and Business Pro plans, all chat sessions can be shared across team members. 
+                  On Business and Business Plus plans, all chat sessions can be shared across team members.
                   You can also tag devices and view team-wide reports and analytics.
                 </p>
               </div>

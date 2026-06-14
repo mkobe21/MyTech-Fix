@@ -313,7 +313,7 @@ export default function TeamReportsPage() {
           </Card>
         </div>
 
-        <div className="mt-8 text-xs text-zinc-500">
+        <div className="mt-8 text-xs text-slate-500">
           Reports are generated from your team’s chat history. Data updates in real time.
         </div>
       </div>

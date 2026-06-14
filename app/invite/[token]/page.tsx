@@ -156,7 +156,7 @@ export default function AcceptInvitePage() {
           <CardContent className="p-8 text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
             <h1 className="text-xl font-semibold mb-2">Invitation Problem</h1>
-            <p className="text-zinc-600 mb-6">{error}</p>
+            <p className="text-slate-400 mb-6">{error}</p>
             <Link href="/dashboard">
               <Button>Go to Dashboard</Button>
             </Link>
@@ -173,7 +173,7 @@ export default function AcceptInvitePage() {
           <CardContent className="p-8">
             <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
             <h1 className="text-2xl font-semibold mb-2">Welcome to the team!</h1>
-            <p className="text-zinc-600">Redirecting you to your team dashboard...</p>
+            <p className="text-slate-400">Redirecting you to your team dashboard...</p>
           </CardContent>
         </Card>
       </div>
@@ -191,14 +191,14 @@ export default function AcceptInvitePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <p className="text-zinc-600">You have been invited to join</p>
+            <p className="text-slate-400">You have been invited to join</p>
             <p className="text-2xl font-semibold mt-1">{invite?.team_name}</p>
-            <p className="text-sm text-zinc-500 mt-1">as <span className="font-medium capitalize">{invite?.role}</span></p>
+            <p className="text-sm text-slate-500 mt-1">as <span className="font-medium capitalize">{invite?.role}</span></p>
           </div>
 
           <div className="bg-background p-4 rounded-xl text-sm">
             <p><strong>Invited email:</strong> {invite?.email}</p>
-            <p className="mt-1 text-xs text-zinc-500">This invitation expires on {new Date(invite!.expires_at).toLocaleDateString()}</p>
+            <p className="mt-1 text-xs text-slate-500">This invitation expires on {new Date(invite!.expires_at).toLocaleDateString()}</p>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -217,7 +217,7 @@ export default function AcceptInvitePage() {
             </Link>
           </div>
 
-          <p className="text-xs text-center text-zinc-500">
+          <p className="text-xs text-center text-slate-500">
             You must be signed in with <strong>{invite?.email}</strong> to accept this invitation.
           </p>
         </CardContent>

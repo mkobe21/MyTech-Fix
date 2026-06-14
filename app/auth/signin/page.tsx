@@ -16,33 +16,33 @@ export default function SignInPrompt() {
           <span className="text-4xl">🔧</span>
         </div>
 
-        <h1 className="text-4xl font-semibold mb-4">
-          Welcome to MyTech-Fix
+        <h1 className="font-sora text-4xl font-bold text-slate-50 mb-4">
+          Welcome to MyTech<span className="text-blue-400">Fix</span>
         </h1>
         <p className="text-muted-foreground text-lg mb-10">
           Sign in to save your chats and get personalized help
         </p>
 
         <div className="space-y-4">
-          <Button 
-            size="lg" 
-            className="btn-premium w-full text-lg py-7 rounded-2xl bg-primary hover:bg-primary/90"
+          <Button
+            size="lg"
+            className="w-full text-lg py-7 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-900/40"
             onClick={() => setShowSignIn(true)}
           >
             Sign In
           </Button>
 
-          <Button 
-            size="lg" 
-            variant="outline" 
-            className="w-full text-lg py-7 rounded-2xl border-white/10 hover:bg-white/5"
+          <Button
+            size="lg"
+            variant="outline"
+            className="w-full text-lg py-7 rounded-2xl border-white/[0.12] text-slate-200 hover:bg-white/5 hover:border-white/25"
             onClick={() => setShowSignUp(true)}
           >
             Create Free Account
           </Button>
         </div>
 
-        <p className="text-xs text-zinc-500 mt-10">
+        <p className="text-xs text-slate-500 mt-10">
           No credit card required • Takes 30 seconds
         </p>
 

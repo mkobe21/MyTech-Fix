@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, Monitor, Smartphone, Home, ArrowRight, Plus, LogOut, User, RefreshCw, Clock, CheckCircle, Zap, Users, BarChart3, Database, Activity, Globe, Server, MessageCircle } from 'lucide-react';
+import { Wifi, Monitor, Smartphone, Home, ArrowRight, Plus, RefreshCw, Clock, Zap, Users, BarChart3, Database, Activity, Globe, Server, MessageCircle, HeartPulse } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -15,13 +15,15 @@ import { toast } from 'sonner';
 import { runFullDiagnostic, getStatusColor, type FullDiagnosticResults, type TestStatus, analyzeWifiChannels, type WifiChannelScanResult } from '@/lib/diagnostics';
 import { DiagnosticResultsViewer } from '@/components/DiagnosticResultsViewer';
 import { WifiChannelVisualizer } from '@/components/WifiChannelVisualizer';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import Navbar from '@/components/Navbar';
+import PlanBadge from '@/components/PlanBadge';
 
 interface ChatSession {
   id: string;
   title: string;
   created_at: string;
   last_message?: string;
+  resolved: boolean;
 }
 
 export default function Dashboard() {
@@ -44,10 +46,6 @@ export default function Dashboard() {
 
   // Track if the user is the owner of a team (for showing Upgrade and Manage Team buttons)
   const [isTeamOwner, setIsTeamOwner] = useState(false);
-
-  // Value delivered stats (dynamic)
-  const [issuesResolved, setIssuesResolved] = useState(0);
-  const [hoursSaved, setHoursSaved] = useState(0);
 
   // Chat limit state
   const [isUnlimitedChats, setIsUnlimitedChats] = useState(false);
@@ -544,10 +542,11 @@ export default function Dashboard() {
       let chatsQuery = supabaseBrowser
         .from('chat_sessions')
         .select(`
-          id, 
-          title, 
+          id,
+          title,
           created_at,
           team_id,
+          resolved,
           chat_messages(content, created_at)
         `)
         .order('created_at', { ascending: false })
@@ -602,40 +601,11 @@ export default function Dashboard() {
 
       const { data: chats } = await chatsQuery;
 
-      // Calculate total issues resolved (chat sessions) this period
-      let countQuery = supabaseBrowser
-        .from('chat_sessions')
-        .select('*', { count: 'exact', head: true });
-
-      if (currentTier === 'business' || currentTier === 'business_plus') {
-        const { data: memberships } = await supabaseBrowser
-          .from('team_members')
-          .select('team_id')
-          .eq('user_id', user.id);
-
-        const teamIds = memberships?.map((m: any) => m.team_id) || [];
-
-        if (teamIds.length > 0) {
-          countQuery = countQuery.or(`user_id.eq.${user.id},team_id.in.(${teamIds.join(',')})`);
-        } else {
-          countQuery = countQuery.eq('user_id', user.id);
-        }
-      } else {
-        countQuery = countQuery.eq('user_id', user.id);
-      }
-
-      const { count: totalSessions } = await countQuery;
-      const resolved = totalSessions || 0;
-      setIssuesResolved(resolved);
-
-      // Estimate time saved (assume ~15 minutes per troubleshooting session)
-      const estimatedHours = Math.round((resolved * 15) / 60 * 10) / 10;
-      setHoursSaved(estimatedHours);
-
       const formattedChats = (chats || []).map((chat: any) => ({
         id: chat.id,
         title: chat.title || "Untitled Conversation",
         created_at: chat.created_at,
+        resolved: chat.resolved ?? false,
         last_message: chat.chat_messages?.[0]?.content?.substring(0, 85) || "No messages yet"
       }));
 
@@ -657,48 +627,9 @@ export default function Dashboard() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  const handleLogout = async () => {
-    await supabaseBrowser.auth.signOut();
-    router.push('/');
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation Bar - Premium Glass */}
-      <nav className="border-b border-white/10 bg-background/70 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 hover:text-foreground transition-colors">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center text-white ring-1 ring-white/20">🔧</div>
-              <span className="font-semibold text-xl tracking-tight">MyTech-Fix</span>
-            </Link>
-            <Link href="/dashboard" className="text-sm font-medium text-primary">Dashboard</Link>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="w-4 h-4" />
-              <span>{username}</span>
-            </div>
-
-            <Link href="/account" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Account
-            </Link>
-
-            <ThemeToggle />
-
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-muted-foreground hover:text-red-400"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Hero Header */}
@@ -712,124 +643,171 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={fetchDashboardData}
-              disabled={refreshing}
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-
-            <Link href="/chat">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 gap-2">
-                <Plus className="h-4 w-4" /> Start New Session
+          <div className="flex flex-col gap-3">
+            {/* Primary actions — always visible */}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={fetchDashboardData}
+                disabled={refreshing}
+                title="Refresh dashboard"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
               </Button>
-            </Link>
-            
-            {/* Upgrade Plan - only visible to team owners (or non-team users) */}
-            {(!isBusinessUser || isTeamOwner) && (
-              <Link href="/pricing">
-                <Button size="lg" variant="outline" className="gap-2">
-                  Upgrade Plan
+
+              <Link href="/chat">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 gap-2">
+                  <Plus className="h-4 w-4" /> Start New Chat
                 </Button>
               </Link>
-            )}
 
-            {/* Manage Team - only visible to team owners */}
-            {isTeamOwner && (
-              <Link href="/teams">
-                <Button size="lg" variant="outline" className="gap-2">
-                  <Users className="h-4 w-4" /> Manage Team
-                </Button>
-              </Link>
-            )}
+              {/* Upgrade — shown to non-business users or team owners */}
+              {(!isBusinessUser || isTeamOwner) && (
+                <Link href="/pricing">
+                  <Button size="lg" variant="outline" className="gap-2 border-white/[0.12]">
+                    Upgrade Plan
+                  </Button>
+                </Link>
+              )}
+            </div>
 
-            {/* View Reports - only for team owners/admins */}
-            {isTeamLeader && teamReportsLink && (
-              <Link href={teamReportsLink}>
-                <Button size="lg" variant="outline" className="gap-2">
-                  <BarChart3 className="h-4 w-4" /> View Reports
-                </Button>
-              </Link>
-            )}
-
-            {/* Device Inventory - available to all business team members and owners */}
+            {/* Business tools row — only for business users */}
             {isBusinessUser && (
-              <Link href="/inventory">
-                <Button size="lg" variant="outline" className="gap-2">
-                  <Database className="h-4 w-4" /> Device Inventory
-                </Button>
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                {isTeamOwner && (
+                  <Link href="/teams">
+                    <Button size="sm" variant="outline" className="gap-1.5 border-white/[0.12] text-xs">
+                      <Users className="h-3.5 w-3.5" /> Manage Team
+                    </Button>
+                  </Link>
+                )}
+                {isTeamLeader && teamReportsLink && (
+                  <Link href={teamReportsLink}>
+                    <Button size="sm" variant="outline" className="gap-1.5 border-white/[0.12] text-xs">
+                      <BarChart3 className="h-3.5 w-3.5" /> View Reports
+                    </Button>
+                  </Link>
+                )}
+                <Link href="/inventory">
+                  <Button size="sm" variant="outline" className="gap-1.5 border-white/[0.12] text-xs">
+                    <Database className="h-3.5 w-3.5" /> Device Inventory
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
 
         {/* Usage Snapshot */}
         {loading ? (
-          <div className="grid md:grid-cols-2 gap-4 mb-10">
-            {[1,2].map(i => (
+          <div className="grid md:grid-cols-3 gap-4 mb-10">
+            {[1,2,3].map(i => (
               <div key={i} className="h-[160px] bg-card rounded-2xl skeleton" />
             ))}
           </div>
         ) : (
-          <motion.div 
-            className="grid md:grid-cols-2 gap-4 mb-10"
+          <motion.div
+            className="grid md:grid-cols-3 gap-4 mb-10"
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
           >
             {/* Plan & Usage */}
             <motion.div variants={fadeInUp} className="h-full">
-            <Card className="h-full border-white/10 bg-gradient-to-br from-card to-background/80 card-premium">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
+              <Card className="h-full border-white/10 bg-gradient-to-br from-card to-background/80 card-premium">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="text-sm font-medium text-primary uppercase tracking-wider">Current Plan</div>
-                    <div className="text-2xl font-semibold mt-1">{getTierLabel(tier)}</div>
+                    <PlanBadge tier={tier} />
                   </div>
-                  <Link href="/pricing">
-                    <Button variant="outline" size="sm" className="border-white/10">Manage Plan</Button>
+                  <div className="flex items-baseline gap-2 mb-1">
+                    {isUnlimitedChats ? (
+                      <>
+                        <div className="text-4xl font-semibold text-primary">Unlimited</div>
+                        <div className="text-base text-muted-foreground">chats</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-4xl font-semibold tabular-nums text-primary">{remainingChats}</div>
+                        <div className="text-base text-muted-foreground">chats left</div>
+                      </>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {sessionsUsed} used · {isUnlimitedChats ? 'unlimited' : `${getSessionLimit(tier)} total`}
+                  </div>
+                  <Link href="/pricing" className="mt-3 inline-block">
+                    <Button variant="outline" size="sm" className="border-white/10 text-xs">Manage Plan</Button>
                   </Link>
-                </div>
-
-                <div className="flex items-baseline gap-3">
-                  {isUnlimitedChats ? (
-                    <>
-                      <div className="text-5xl font-semibold text-primary">Unlimited</div>
-                      <div className="text-xl text-muted-foreground">chats</div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-5xl font-semibold tabular-nums text-primary">{remainingChats}</div>
-                      <div className="text-xl text-muted-foreground">chats left this period</div>
-                    </>
-                  )}
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {sessionsUsed} used • {getTierLabel(tier)} {isUnlimitedChats ? 'includes unlimited chats' : `includes up to ${getSessionLimit(tier)} chats`}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
             </motion.div>
 
-            {/* Value Delivered */}
+            {/* Last Network Health */}
             <motion.div variants={fadeInUp} className="h-full">
-            <Card className="h-full bg-card/80 border-white/10 card-premium">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
-                  <Zap className="h-4 w-4" /> This Period
-                </div>
-                <div className="text-4xl font-semibold mb-1">{issuesResolved}</div>
-                <div className="text-sm text-muted-foreground">issues resolved</div>
-                <div className="mt-3 text-xs text-emerald-400 flex items-center gap-1">
-                  <CheckCircle className="h-3 w-3" /> ~{hoursSaved} hours saved
-                </div>
-              </CardContent>
-            </Card>
+              <Card className="h-full bg-card/80 border-white/10 card-premium">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
+                    <HeartPulse className="h-4 w-4" /> Network Health
+                  </div>
+                  {recentDiagnostics[0] ? (() => {
+                    const last = recentDiagnostics[0];
+                    const st = (last.overall_status || 'unknown') as TestStatus;
+                    const colors = getStatusColor(st);
+                    return (
+                      <>
+                        <div className={`text-3xl font-semibold mb-1 ${colors.text}`}>
+                          {st.charAt(0).toUpperCase() + st.slice(1)}
+                        </div>
+                        <div className="text-xs text-muted-foreground mb-3">
+                          Last run {new Date(last.created_at).toLocaleDateString()}
+                        </div>
+                        <Button size="sm" variant="outline" className="border-white/10 text-xs" onClick={startFullDiagnostic} disabled={diagnosticLimit - diagnosticsUsed <= 0}>
+                          Run Again
+                        </Button>
+                      </>
+                    );
+                  })() : (
+                    <>
+                      <div className="text-2xl font-semibold text-muted-foreground mb-1">No data</div>
+                      <div className="text-xs text-muted-foreground mb-3">Run a diagnostic to check your network</div>
+                      <Button size="sm" variant="outline" className="border-white/10 text-xs" onClick={startFullDiagnostic} disabled={diagnosticLimit - diagnosticsUsed <= 0}>
+                        Run First Diagnostic
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Diagnostics Usage */}
+            <motion.div variants={fadeInUp} className="h-full">
+              <Card className="h-full bg-card/80 border-white/10 card-premium">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
+                    <Activity className="h-4 w-4" /> Diagnostics
+                  </div>
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <div className="text-4xl font-semibold tabular-nums text-primary">
+                      {diagnosticLimit - diagnosticsUsed}
+                    </div>
+                    <div className="text-base text-muted-foreground">runs left</div>
+                  </div>
+                  <div className="w-full bg-white/10 rounded-full h-1.5 mb-2 overflow-hidden">
+                    <div
+                      className="bg-primary h-1.5 rounded-full transition-all"
+                      style={{ width: `${diagnosticLimit > 0 ? Math.min((diagnosticsUsed / diagnosticLimit) * 100, 100) : 0}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {diagnosticsUsed} of {diagnosticLimit} used
+                    {diagnosticResetDate && isMonthlyDiagnosticLimit(tier) && (
+                      <span className="ml-1">· resets {new Date(diagnosticResetDate).toLocaleDateString()}</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           </motion.div>
         )}
@@ -1000,6 +978,42 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Onboarding checklist — first-time users only */}
+        {!loading && recentChats.length === 0 && diagnosticsUsed === 0 && (
+          <div className="mb-8 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-6">
+            <h3 className="font-sora font-semibold text-slate-100 mb-1">Get started in 3 steps</h3>
+            <p className="text-sm text-slate-400 mb-5">Complete these to get the most out of MyTech-Fix.</p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center flex-shrink-0">
+                  <span className="text-emerald-400 text-xs font-bold">✓</span>
+                </div>
+                <span className="text-sm text-slate-300 line-through opacity-60">Create your account</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-white/5 border border-white/20 flex items-center justify-center flex-shrink-0 text-xs text-slate-400 font-semibold">2</div>
+                <div className="flex items-center gap-3 flex-1">
+                  <span className="text-sm text-slate-200">Start your first chat session</span>
+                  <Link href="/chat">
+                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 h-auto rounded-lg">
+                      Start Chat →
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-white/5 border border-white/20 flex items-center justify-center flex-shrink-0 text-xs text-slate-400 font-semibold">3</div>
+                <div className="flex items-center gap-3 flex-1">
+                  <span className="text-sm text-slate-200">Run your first network diagnostic</span>
+                  <Button size="sm" variant="outline" className="border-white/20 text-xs px-3 py-1 h-auto rounded-lg" onClick={startFullDiagnostic} disabled={diagnosticLimit - diagnosticsUsed <= 0}>
+                    Run Diagnostic →
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-12 gap-6 animate-fade-in">
           {/* Quick Start */}
           <div className="lg:col-span-5">
@@ -1102,8 +1116,8 @@ export default function Dashboard() {
                       };
 
                       const category = getCategory(chat.title);
-                      const status = index === 0 ? 'Resolved' : 'In Progress'; // Demo status
-                      const statusColor = status === 'Resolved' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400';
+                      const status = chat.resolved ? 'Resolved' : 'In Progress';
+                      const statusColor = chat.resolved ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400';
 
                       return (
                         <motion.div key={chat.id} variants={fadeInUp}>
@@ -1173,7 +1187,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Link href="/pricing">
-                <Button size="lg" variant="secondary" className="bg-white text-black hover:bg-white/90 shrink-0 btn-premium">
+                <Button size="lg" className="bg-blue-500 hover:bg-blue-600 text-white shrink-0 rounded-xl">
                   See Upgrade Options
                 </Button>
               </Link>

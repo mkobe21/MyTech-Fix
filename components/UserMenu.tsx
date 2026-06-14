@@ -22,7 +22,6 @@ export default function UserMenu() {
     return (
       <div className="flex items-center gap-3">
         <Button variant="ghost" onClick={openSignIn}>Sign In</Button>
-        <Button onClick={openSignUp}>Sign Up</Button>
       </div>
     );
   }

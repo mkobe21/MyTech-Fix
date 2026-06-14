@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Sora } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/components/AuthProvider';
@@ -9,6 +9,7 @@ import ConditionalFooter from '@/components/ConditionalFooter';
 import { MotionConfig } from 'framer-motion';
 
 const inter = Inter({ subsets: ['latin'] });
+const sora = Sora({ subsets: ['latin'], variable: '--font-sora', weight: ['400', '600', '700', '800'] });
 
 export const metadata: Metadata = {
   title: 'MyTech-Fix - AI Tech Support & Troubleshooting',
@@ -22,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${sora.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

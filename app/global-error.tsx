@@ -21,7 +21,7 @@ export default function GlobalError({
         <div className="max-w-md text-center">
           <div className="text-6xl mb-6">🔧</div>
           <h1 className="text-3xl font-semibold mb-3">Something went wrong</h1>
-          <p className="text-zinc-600 mb-8">
+          <p className="text-slate-400 mb-8">
             We hit an unexpected error. This has been logged and we&apos;re looking into it.
           </p>
           
@@ -38,7 +38,7 @@ export default function GlobalError({
             </Button>
           </div>
 
-          <p className="text-xs text-zinc-400 mt-8">
+          <p className="text-xs text-slate-500 mt-8">
             Error ID: {error.digest || 'unknown'}
           </p>
         </div>

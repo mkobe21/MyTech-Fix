@@ -7,7 +7,6 @@ import { supabaseBrowser } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Clock, Search, Filter, ArrowRight, Trash2, ArrowUpDown, Download } from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +17,7 @@ interface ChatSession {
   title: string;
   created_at: string;
   last_message?: string;
+  resolved: boolean;
 }
 
 const categories = ['All', 'Wi-Fi', 'Computer', 'Smart Home', 'Printer', 'Other'] as const;
@@ -46,10 +46,11 @@ export default function HistoryPage() {
         let historyQuery = supabaseBrowser
           .from('chat_sessions')
           .select(`
-            id, 
-            title, 
+            id,
+            title,
             created_at,
             team_id,
+            resolved,
             chat_messages(content, created_at)
           `)
           .order('created_at', { ascending: false });
@@ -98,6 +99,7 @@ export default function HistoryPage() {
           id: chat.id,
           title: chat.title || "Untitled Conversation",
           created_at: chat.created_at,
+          resolved: chat.resolved ?? false,
           last_message: chat.chat_messages?.[0]?.content?.substring(0, 120) || "No messages yet",
         }));
 
@@ -319,25 +321,24 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation - Premium Glass */}
-      <nav className="border-b border-white/10 bg-background/70 backdrop-blur-xl sticky top-0 z-50">
+      {/* Top Navigation */}
+      <nav className="border-b border-white/[0.07] bg-[#0A0F1E]/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/dashboard" className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-100 transition-colors">
               <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+              Dashboard
             </Link>
-            <div className="h-5 w-px bg-white/10" />
+            <div className="h-5 w-px bg-white/[0.07]" />
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">All Troubleshooting Sessions</h1>
-              <p className="text-xs text-muted-foreground">Complete history of your conversations</p>
+              <h1 className="font-sora text-lg font-bold text-slate-50 tracking-tight">Chat History</h1>
+              <p className="text-xs text-slate-500">All your troubleshooting sessions</p>
             </div>
           </div>
-          
-          <ThemeToggle />
+
           <Link href="/chat">
-            <Button className="btn-premium bg-primary hover:bg-primary/90">
-              Start New Session
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-5">
+              New Session
             </Button>
           </Link>
         </div>
@@ -468,6 +469,9 @@ export default function HistoryPage() {
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColor.replace('bg-', 'bg-white/10 text-').replace('text-blue-700', 'text-blue-400').replace('text-orange-700', 'text-orange-400').replace('text-emerald-700', 'text-emerald-400').replace('text-purple-700', 'text-purple-400').replace('text-zinc-700', 'text-muted-foreground')}`}>
                           {category}
+                        </span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${session.resolved ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'}`}>
+                          {session.resolved ? 'Resolved' : 'In Progress'}
                         </span>
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
