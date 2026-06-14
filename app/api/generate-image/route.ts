@@ -113,7 +113,9 @@ export async function POST(request: NextRequest) {
       ? `${prompt}. Context from troubleshooting: ${context}` 
       : prompt;
 
-    console.log('[generate-image] About to call image gen. OPENAI_API_KEY?', !!process.env.OPENAI_API_KEY, 'XAI_API_KEY?', !!process.env.XAI_API_KEY, 'GROK_API_KEY(fallback)?', !!process.env.GROK_API_KEY, 'XAI_IMAGE_MODEL=', process.env.XAI_IMAGE_MODEL || '(grok-imagine-image-quality)');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[generate-image] About to call image gen. OPENAI_API_KEY?', !!process.env.OPENAI_API_KEY, 'XAI_API_KEY?', !!process.env.XAI_API_KEY, 'GROK_API_KEY(fallback)?', !!process.env.GROK_API_KEY, 'XAI_IMAGE_MODEL=', process.env.XAI_IMAGE_MODEL || '(grok-imagine-image-quality)');
+    }
     const imageUrl = await generateImage(fullPrompt);
 
     if (!imageUrl) {

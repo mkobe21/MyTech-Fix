@@ -1,6 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { assertServerEnv } from '@/lib/validate-env';
+
+// Run env validation early on protected routes (server only). Throws with clear message on critical missing vars.
+assertServerEnv();
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
@@ -25,8 +29,19 @@ export async function middleware(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession();
 
-  const protectedPaths = ['/chat', '/dashboard', '/history'];
-  const isProtected = protectedPaths.some(path => 
+  // Protect all core authenticated app surfaces (client pages still have their own guards + redirects
+  // for UX, but middleware provides defense-in-depth and prevents unauthenticated direct access).
+  const protectedPaths = [
+    '/chat',
+    '/dashboard',
+    '/history',
+    '/account',
+    '/diagnostics',
+    '/inventory',
+    '/teams',
+    '/upgrade',
+  ];
+  const isProtected = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   );
 
@@ -39,5 +54,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/chat/:path*', '/dashboard/:path*', '/history/:path*'],
+  matcher: [
+    '/chat/:path*',
+    '/dashboard/:path*',
+    '/history/:path*',
+    '/account/:path*',
+    '/diagnostics/:path*',
+    '/inventory/:path*',
+    '/teams/:path*',
+    '/upgrade/:path*',
+  ],
 };

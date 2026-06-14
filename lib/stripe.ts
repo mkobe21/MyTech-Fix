@@ -8,6 +8,9 @@ export function getStripe(): Stripe {
     if (!process.env.STRIPE_SECRET_KEY) {
       throw new Error('STRIPE_SECRET_KEY is not set');
     }
+    // Pinned API version. If you see "dahlia" or future-dated versions in your account, update to a stable
+    // version listed at https://stripe.com/docs/upgrades (e.g. a 2025- or 2026-YY-MM version).
+    // Current value chosen at project time; change deliberately and test webhooks + checkout after update.
     _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2026-04-22.dahlia',
       typescript: true,

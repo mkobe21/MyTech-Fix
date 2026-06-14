@@ -235,3 +235,106 @@ export function pickHighestTier(a: string | null | undefined, b: string | null |
   const tb = (b as Tier) || 'free_trial';
   return (TIER_RANK[tb] > TIER_RANK[ta] ? tb : ta);
 }
+
+// ============================================================
+// Shared server helper: authoritative tier + live usage snapshot
+// ============================================================
+
+export interface UserTierUsage {
+  tier: Tier;
+  sessionsUsed: number;
+  imagesUsed: number;
+  diagnosticsUsed: number;
+  chatLimit: number;
+  imageLimit: number;
+  diagnosticLimit: number;
+  imageResetDate: string | null;
+  diagnosticResetDate: string | null;
+  isUnlimitedChats: boolean;
+}
+
+/**
+ * Single source for "what is this user's current tier (highest wins) and usage numbers".
+ * Performs the profiles + user_tiers dual read + pickHighestTier.
+ * Does NOT perform resets or increments (callers do that with the returned values).
+ *
+ * Use from server routes (pass a server Supabase client created via createSupabaseServerClient or supabaseAdmin).
+ * Returns safe defaults for brand new / missing rows.
+ */
+export async function getUserTierAndUsage(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any, // server client (SupabaseClient); any to avoid heavy import cycles / generated types requirement
+  userId: string
+): Promise<UserTierUsage> {
+  let pTier: string | null = null;
+  let pSessions = 0;
+  let pImages = 0;
+  let pDiags = 0;
+  let pImageReset: string | null = null;
+  let pDiagReset: string | null = null;
+
+  let uTier: string | null = null;
+  let uSessions = 0;
+  let uImages = 0;
+  let uDiags = 0;
+  let uImageReset: string | null = null;
+  let uDiagReset: string | null = null;
+
+  try {
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('tier, sessions_used, images_used, diagnostics_used, image_reset_date, diagnostic_reset_date')
+      .eq('id', userId)
+      .maybeSingle();
+    if (prof) {
+      pTier = prof.tier;
+      pSessions = prof.sessions_used || 0;
+      pImages = prof.images_used || 0;
+      pDiags = prof.diagnostics_used || 0;
+      pImageReset = prof.image_reset_date || null;
+      pDiagReset = prof.diagnostic_reset_date || null;
+    }
+  } catch {}
+
+  try {
+    const { data: ut } = await supabase
+      .from('user_tiers')
+      .select('tier, sessions_used, images_used, diagnostics_used, image_reset_date, diagnostic_reset_date')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (ut) {
+      uTier = ut.tier;
+      uSessions = ut.sessions_used || 0;
+      uImages = ut.images_used || 0;
+      uDiags = ut.diagnostics_used || 0;
+      uImageReset = ut.image_reset_date || null;
+      uDiagReset = ut.diagnostic_reset_date || null;
+    }
+  } catch {}
+
+  const resolvedTier = pickHighestTier(pTier, uTier);
+  const sessionsUsed = Math.max(pSessions, uSessions); // take the higher observed (defensive)
+  const imagesUsed = Math.max(pImages, uImages);
+  const diagnosticsUsed = Math.max(pDiags, uDiags);
+
+  // Prefer a non-null reset date from either source
+  const imageResetDate = pImageReset || uImageReset || null;
+  const diagnosticResetDate = pDiagReset || uDiagReset || null;
+
+  const chatLimit = getLimit(resolvedTier);
+  const imageLimit = getImageLimit(resolvedTier);
+  const diagnosticLimit = getDiagnosticLimit(resolvedTier);
+
+  return {
+    tier: resolvedTier,
+    sessionsUsed,
+    imagesUsed,
+    diagnosticsUsed,
+    chatLimit,
+    imageLimit,
+    diagnosticLimit,
+    imageResetDate,
+    diagnosticResetDate,
+    isUnlimitedChats: chatLimit >= 9999,
+  };
+}

@@ -380,6 +380,63 @@ export async function runFullDiagnostic(
 }
 
 // ============================================================
+// Formatting for chat injection (used by chat page for visible bubble + passed structured to backend)
+// ============================================================
+
+/**
+ * Produce a compact, human + model friendly textual report for injection into chat.
+ * Keeps the most actionable numbers + any prior AI analysis.
+ * This is what the user sees in the chat bubble and (a version of) what the model receives as context.
+ */
+export function formatDiagnosticReportForChat(
+  results: FullDiagnosticResults | any | null,
+  analysis?: string | null,
+  runType?: string
+): string {
+  if (!results) return 'No diagnostic results available.';
+
+  const r = results || {};
+  const lines: string[] = [];
+
+  const rt = (runType || r.run_type || 'full').toLowerCase();
+  if (rt.includes('wifi') || r.wifiChannelScan) {
+    const w = r.wifiChannelScan || r;
+    lines.push('**WiFi Channel Scan Report**');
+    if (w.userChannel != null) lines.push(`- Current channel: ${w.userChannel}`);
+    lines.push(`- Networks observed (2.4 GHz): ${w.networks?.length ?? 0}`);
+    if (w.crowdedChannels?.length) lines.push(`- Crowded channels: ${w.crowdedChannels.join(', ')}`);
+    const rec = (w.recommendedChannels || []).map((c: any) => `${c.channel} (interference: ${c.count})`).join(', ');
+    if (rec) lines.push(`- Recommended (1/6/11): ${rec}`);
+    if (w.currentStatus) lines.push(`- Status on your channel: ${w.currentStatus}`);
+    if (w.summary) lines.push(`\n${w.summary}`);
+  } else {
+    lines.push('**Network Diagnostic Report**');
+    if (r.internet) {
+      lines.push(`- Internet: DL ${r.internet.downloadMbps ?? 'N/A'} Mbps / UL ${r.internet.uploadMbps ?? 'N/A'} Mbps (ping ~${r.internet.pingMs ?? 'N/A'} ms) — ${r.internet.status ?? ''}`);
+    }
+    if (r.wifi) {
+      lines.push(`- WiFi quality: ${r.wifi.quality ?? 'N/A'} (downlink ${r.wifi.downlink ?? 'N/A'} Mbps, rtt ${r.wifi.rtt ?? 'N/A'} ms)`);
+    }
+    if (r.latency) {
+      lines.push(`- Latency/packet loss: avg ${r.latency.averageMs ?? 'N/A'} ms, loss ${r.latency.packetLossPercent ?? 'N/A'}% — ${r.latency.status ?? ''}`);
+    }
+    if (r.dns) {
+      lines.push(`- DNS: ${r.dns.resolved ? `resolved in ${r.dns.timeMs ?? 'N/A'} ms` : 'failed'}`);
+    }
+    if (r.overall) lines.push(`- Overall: ${r.overall}`);
+    if (r.system) lines.push(`- System: ${r.system.browser} / ${r.system.os} (${r.system.device})`);
+  }
+
+  if (r.timestamp) lines.push(`\nRun: ${new Date(r.timestamp).toLocaleString()}`);
+
+  if (analysis) {
+    lines.push(`\n**Prior MyTech-Fix Analysis:**\n${analysis}`);
+  }
+
+  return lines.join('\n');
+}
+
+// ============================================================
 // WiFi Channel Scanner / Interference Analyzer (new diagnostic tool)
 // ============================================================
 

@@ -126,7 +126,7 @@ export default function InventoryPage() {
           .from('team_members')
           .select(`
             user_id,
-            profiles:user_id (
+            profiles!inner (
               id,
               full_name,
               email

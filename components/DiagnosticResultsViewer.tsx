@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { getStatusColor, type FullDiagnosticResults, type TestStatus } from '@/lib/diagnostics';
 import { WifiChannelVisualizer } from './WifiChannelVisualizer';
+import { MessageCircle } from 'lucide-react';
 
 interface DiagnosticResultsViewerProps {
   results: FullDiagnosticResults | any | null;
@@ -11,6 +12,8 @@ interface DiagnosticResultsViewerProps {
   isAnalyzing?: boolean;
   /** If true, always show the analysis button area even if no results (for empty state) */
   compact?: boolean;
+  /** Called when user wants to auto-inject this diagnostic report (raw results + analysis) into the main chat for grounded troubleshooting. */
+  onInjectToChat?: () => void;
 }
 
 /**
@@ -24,6 +27,7 @@ export function DiagnosticResultsViewer({
   onRequestAnalysis,
   isAnalyzing = false,
   compact = false,
+  onInjectToChat,
 }: DiagnosticResultsViewerProps) {
   const hasResults = !!results;
 
@@ -102,6 +106,24 @@ export function DiagnosticResultsViewer({
           </div>
         )}
       </div>
+
+      {/* Auto-inject to Chat (primary value for this feature) */}
+      {onInjectToChat && (
+        <div className="pt-2 border-t border-white/10">
+          <Button
+            variant="outline"
+            onClick={onInjectToChat}
+            disabled={!hasResults}
+            className="w-full flex items-center gap-2"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Troubleshoot this report in Chat
+          </Button>
+          <p className="text-[10px] text-muted-foreground text-center mt-1.5">
+            Injects the metrics + analysis as context so the AI can give precise, data-driven steps.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

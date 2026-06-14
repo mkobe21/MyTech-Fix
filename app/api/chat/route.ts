@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { getPromptStyle, getTierLabel, getImageLimit, isMonthlyImageLimit, getLimit, pickHighestTier, getDiagnosticLimit, isMonthlyDiagnosticLimit, type Tier } from '@/lib/tiers';
+import { getPromptStyle, getTierLabel, getImageLimit, isMonthlyImageLimit, getLimit, pickHighestTier, getUserTierAndUsage, type Tier } from '@/lib/tiers';
 import { generateImage } from '@/lib/image-generation';
+import { formatDiagnosticReportForChat } from '@/lib/diagnostics';
 
 // =============================================
 // TIER-AWARE SYSTEM PROMPT (now uses centralized tier config)
@@ -79,7 +80,7 @@ You will be told the user's current tier. Adjust your response depth accordingly
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    const { message, imageUrl, history, generateVisualPrompt } = await request.json();
+    const { message, imageUrl, history, generateVisualPrompt, diagnosticContext } = await request.json();
 
     // Create Supabase server client
     const cookieStore = await cookies();
@@ -107,64 +108,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch user's tier: always consider both sources and pick the highest rank (resilient to
-    // profiles vs user_tiers drift after upgrades/webhooks). Profiles still preferred for display
-    // in other UIs, but for AI behavior we want the best available plan.
-    let userTier: Tier = 'free_trial';
+    // Use centralized resilient helper (profiles + user_tiers + pickHighest + usage snapshot).
+    // This replaces ~50 lines of duplicated dual-read logic that existed in chat, image, diagnostics, etc.
+    let usage: Awaited<ReturnType<typeof getUserTierAndUsage>>;
     try {
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('tier')
-        .eq('id', user.id)
-        .maybeSingle();
-      const { data: ut } = await supabase
-        .from('user_tiers')
-        .select('tier')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      const p = prof?.tier as Tier | undefined;
-      const u = ut?.tier as Tier | undefined;
-      userTier = pickHighestTier(p, u);
-    } catch {}
-
-    // Fetch full current usage/credits so the AI can accurately answer questions like
-    // "how many credits do I have left?", "how many chats/images left?", etc.
-    let sessionsUsed = 0;
-    let imagesUsed = 0;
-    let diagnosticsUsed = 0;
-    let imageLimit = 0;
-    let diagnosticLimit = 0;
-    let chatLimit = 0;
-    let imageResetDate: string | null = null;
-    let diagnosticResetDate: string | null = null;
-
-    try {
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('sessions_used, images_used, diagnostics_used, image_reset_date, diagnostic_reset_date')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      const { data: ut } = await supabase
-        .from('user_tiers')
-        .select('sessions_used, images_used, diagnostics_used, image_reset_date, diagnostic_reset_date')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      sessionsUsed = (prof?.sessions_used ?? ut?.sessions_used) || 0;
-      imagesUsed = (prof?.images_used ?? ut?.images_used) || 0;
-      diagnosticsUsed = (prof?.diagnostics_used ?? ut?.diagnostics_used) || 0;
-      imageResetDate = prof?.image_reset_date ?? ut?.image_reset_date ?? null;
-      diagnosticResetDate = prof?.diagnostic_reset_date ?? ut?.diagnostic_reset_date ?? null;
-
-      chatLimit = getLimit(userTier);
-      imageLimit = getImageLimit(userTier);
-      diagnosticLimit = getDiagnosticLimit(userTier);
+      usage = await getUserTierAndUsage(supabase, user.id);
     } catch (usageErr) {
       console.warn('Non-fatal: could not load usage numbers for AI prompt', usageErr);
+      // Fallback to safe free trial values so chat can still attempt (server limit check below will be conservative)
+      usage = {
+        tier: 'free_trial' as Tier,
+        sessionsUsed: 0,
+        imagesUsed: 0,
+        diagnosticsUsed: 0,
+        chatLimit: 5,
+        imageLimit: 1,
+        diagnosticLimit: 1,
+        imageResetDate: null,
+        diagnosticResetDate: null,
+        isUnlimitedChats: false,
+      };
     }
 
-    const chatRemaining = chatLimit === 9999 ? 'Unlimited' : Math.max(0, chatLimit - sessionsUsed);
+    const userTier = usage.tier;
+    const sessionsUsed = usage.sessionsUsed;
+    const imagesUsed = usage.imagesUsed;
+    const diagnosticsUsed = usage.diagnosticsUsed;
+    const chatLimit = usage.chatLimit;
+    const imageLimit = usage.imageLimit;
+    const diagnosticLimit = usage.diagnosticLimit;
+    const imageResetDate = usage.imageResetDate;
+    const diagnosticResetDate = usage.diagnosticResetDate;
+
+    const chatRemaining = usage.isUnlimitedChats ? 'Unlimited' : Math.max(0, chatLimit - sessionsUsed);
     const imageRemaining = Math.max(0, imageLimit - imagesUsed);
     const diagnosticRemaining = Math.max(0, diagnosticLimit - diagnosticsUsed);
 
@@ -267,7 +243,26 @@ ${diagnosticResetDate ? `- Diagnostics quota next resets: ${new Date(diagnosticR
 
 Be direct and accurate. Example good answer: "You have 12 chats and 7 image credits left this period."`;
 
-    const systemPrompt = baseSystemPrompt + usageInfo;
+    let systemPrompt = baseSystemPrompt + usageInfo;
+
+    // === DIAGNOSTIC REPORT INJECTION (auto-inject feature) ===
+    // If the client sent structured diagnosticContext (from a ?diagnostic=ID flow or future picker),
+    // turn the raw results + prior analysis into a compact, high-signal block and append it to the
+    // system prompt. This ensures the model has the *exact* numbers (more reliable than relying on
+    // whatever text the user sees in the chat bubble).
+    if (diagnosticContext && diagnosticContext.results) {
+      try {
+        const reportBlock = formatDiagnosticReportForChat(
+          diagnosticContext.results,
+          diagnosticContext.analysis,
+          diagnosticContext.run_type
+        );
+        systemPrompt = systemPrompt + `\n\n### Recently Injected Diagnostic Report\nThe user ran an automated diagnostic and wants troubleshooting help grounded in these objective results.\n\n${reportBlock}\n\nReference the specific values, statuses, and any prior analysis above when giving advice. Be concrete and actionable.`;
+      } catch (e) {
+        // Non-fatal: fall back to including a raw snippet so we don't lose the data entirely.
+        systemPrompt = systemPrompt + `\n\n### Injected Diagnostic Context (raw)\n${JSON.stringify(diagnosticContext.results).slice(0, 2000)}`;
+      }
+    }
 
     // Prepare messages for Grok
     const messages = [

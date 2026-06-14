@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, Monitor, Smartphone, Home, ArrowRight, Plus, LogOut, User, RefreshCw, Clock, CheckCircle, Zap, Users, BarChart3, Database, Activity, Globe, Server } from 'lucide-react';
+import { Wifi, Monitor, Smartphone, Home, ArrowRight, Plus, LogOut, User, RefreshCw, Clock, CheckCircle, Zap, Users, BarChart3, Database, Activity, Globe, Server, MessageCircle } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -381,6 +381,20 @@ export default function Dashboard() {
     setDiagnosticAnalysis(null);
     setCurrentDiagnosticId(null);
     setViewingDiagnostic(null);
+  };
+
+  // Auto-inject the current (or viewed historical) diagnostic report into chat as rich context.
+  // The id lets the chat page fetch the authoritative results + ai_analysis from user_diagnostics.
+  const injectCurrentDiagnosticToChat = () => {
+    const idToUse = currentDiagnosticId || viewingDiagnostic?.id;
+    if (idToUse) {
+      closeDiagnosticsDialog();
+      router.push(`/chat?diagnostic=${idToUse}`);
+    } else {
+      closeDiagnosticsDialog();
+      router.push('/chat');
+      toast.info('Open a diagnostic from history to inject its full structured report.');
+    }
   };
 
   const fetchDashboardData = useCallback(async () => {
@@ -1170,7 +1184,7 @@ export default function Dashboard() {
 
       {/* === Diagnostics Runner / Viewer Dialog === */}
       <Dialog open={showDiagnosticsDialog} onOpenChange={(open) => { if (!open) closeDiagnosticsDialog(); }}>
-        <DialogContent className="max-w-3xl max-h-[85vh] bg-background border-white/10 flex flex-col">
+        <DialogContent className="max-w-3xl max-h-[88vh] bg-background border-white/10 flex flex-col overflow-hidden gap-2">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" /> {viewingDiagnostic && (finalDiagnosticResults || liveResults)?.wifiChannelScan ? 'WiFi Channel Scan Report' : (viewingDiagnostic ? 'Diagnostic Report' : 'Smart Diagnostics')}
@@ -1202,6 +1216,7 @@ export default function Dashboard() {
                 analysis={diagnosticAnalysis}
                 onRequestAnalysis={requestAIAnalysis}
                 isAnalyzing={isAnalyzing}
+                onInjectToChat={injectCurrentDiagnosticToChat}
               />
             )}
 
@@ -1222,10 +1237,16 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-white/10 mt-2">
+          <div className="flex flex-wrap justify-end gap-2 pt-3 border-t border-white/10 flex-shrink-0">
             <Button variant="outline" onClick={closeDiagnosticsDialog}>Close</Button>
             {finalDiagnosticResults && !isRunningDiagnostic && (
-              <Button onClick={fetchDashboardData} variant="outline">Refresh Dashboard</Button>
+              <>
+                <Button onClick={fetchDashboardData} variant="outline" size="sm">Refresh Dashboard</Button>
+                <Button onClick={injectCurrentDiagnosticToChat} size="sm" className="flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Troubleshoot in Chat
+                </Button>
+              </>
             )}
           </div>
         </DialogContent>

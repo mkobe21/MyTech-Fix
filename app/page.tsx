@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { motion } from 'framer-motion';
-import { staggerContainer, staggerContainerSlow, fadeInUp } from '@/lib/animations';
+import { staggerContainer, staggerContainerSlow, fadeInUp, cardInteractive } from '@/lib/animations';
 
 export default function LandingPage() {
   return (
@@ -75,7 +75,7 @@ export default function LandingPage() {
             variants={staggerContainer}
           >
             {/* Home Users Card */}
-            <motion.div variants={fadeInUp} className="border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-colors bg-card/60 backdrop-blur">
+            <motion.div variants={fadeInUp} {...cardInteractive} className="border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-colors bg-card/60 backdrop-blur">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
                   <Home className="w-6 h-6 text-blue-600" />

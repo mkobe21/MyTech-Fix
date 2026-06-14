@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
-import { getDiagnosticLimit, isMonthlyDiagnosticLimit, type Tier } from '@/lib/tiers';
+import { getDiagnosticLimit, isMonthlyDiagnosticLimit, getUserTierAndUsage } from '@/lib/tiers';
 
 /**
  * Starts a diagnostic run (consumes 1 quota unit server-side).
@@ -19,46 +19,20 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const runType = (body.run_type as string) || 'full';
 
-    // Fetch current usage/tier (prefer profiles, fallback user_tiers - same pattern as images)
-    let profile: any = null;
-    let t1: string | null = null;
-    let t2: string | null = null;
-
+    // Use the shared helper for resilient tier + usage (replaces duplicated dual-read + pick logic).
+    let usage;
     try {
-      const res = await supabase
-        .from('profiles')
-        .select('tier, diagnostics_used, diagnostic_reset_date, sessions_used')
-        .eq('id', user.id)
-        .maybeSingle();
-      profile = res.data;
-      if (profile) t1 = profile.tier;
-    } catch (e) { /* ignore */ }
-
-    let utData: any = null;
-    try {
-      const { data: ut } = await supabase
-        .from('user_tiers')
-        .select('tier, diagnostics_used, diagnostic_reset_date')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      utData = ut;
-      if (ut) t2 = ut.tier;
-    } catch {}
-
-    if (!profile && utData) {
-      profile = utData;
-    }
-
-    if (!profile) {
+      usage = await getUserTierAndUsage(supabase, user.id);
+    } catch (e) {
       return NextResponse.json({ error: 'Could not load your diagnostic usage data.' }, { status: 500 });
     }
 
-    const tier = (t1 as Tier) || (t2 as Tier) || 'free_trial';
+    const tier = usage.tier;
     const isMonthly = isMonthlyDiagnosticLimit(tier);
     const limit = getDiagnosticLimit(tier);
 
-    let currentUsed = profile.diagnostics_used || 0;
-    const resetDate = profile.diagnostic_reset_date;
+    let currentUsed = usage.diagnosticsUsed;
+    const resetDate = usage.diagnosticResetDate;
 
     // Server-side reset for monthly tiers (exact same logic as images)
     if (isMonthly && resetDate && new Date(resetDate) < new Date()) {

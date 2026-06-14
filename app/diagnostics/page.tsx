@@ -110,6 +110,14 @@ export default function DiagnosticRunsPage() {
     // keep selected for a moment in case of analyze race; cleared on next open
   };
 
+  // Inject the selected diagnostic (from history) into chat.
+  const injectSelectedDiagnosticToChat = () => {
+    if (selectedDiag?.id) {
+      closeReportDialog();
+      router.push(`/chat?diagnostic=${selectedDiag.id}`);
+    }
+  };
+
   // Request AI analysis for the currently selected report (persists via the API route)
   const requestAIAnalysis = async () => {
     if (!selectedDiag || !selectedResults) return;
@@ -591,6 +599,7 @@ export default function DiagnosticRunsPage() {
                 analysis={selectedAnalysis}
                 onRequestAnalysis={requestAIAnalysis}
                 isAnalyzing={isAnalyzing}
+                onInjectToChat={injectSelectedDiagnosticToChat}
               />
             ) : (
               <div className="text-sm text-muted-foreground">Loading full results…</div>

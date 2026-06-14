@@ -3,11 +3,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
 import AuthModal from './AuthModal';
+import type { User } from '@supabase/supabase-js';
 
 type AuthContextType = {
   openSignIn: () => void;
   openSignUp: () => void;
-  user: any | null;
+  user: User | null;
   userLoading: boolean;
 };
 
@@ -16,7 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
 
   // Global auth user listener (single source so UserMenu, ThemeToggle etc. don't duplicate)

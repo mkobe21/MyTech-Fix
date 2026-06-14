@@ -3,17 +3,18 @@
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Upload, X, Users } from 'lucide-react';
+import { Send, Upload, X, Users, Mic } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { supabaseBrowser } from '@/lib/supabase';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import BusinessPromptPacks from '@/components/BusinessPromptPacks';
 import { motion, AnimatePresence } from 'framer-motion';
 import { messageIn } from '@/lib/animations';
 import { toast } from 'sonner';
 import { getLimit, getTierLabel, pickHighestTier } from '@/lib/tiers';
+import { formatDiagnosticReportForChat } from '@/lib/diagnostics';
 
 interface Message {
   id: string;
@@ -26,12 +27,13 @@ interface Message {
 function ChatContent() {
   const searchParams = useSearchParams();
   const sessionParam = searchParams.get('session');
+  const diagnosticParam = searchParams.get('diagnostic'); // for auto-inject of a user_diagnostics report
 
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
       role: 'assistant',
-      content: "Hi! I'm MyTech-Fix. I can help with tech troubleshooting, device setup, productivity tasks, and general guidance on cybersecurity events. Describe your issue, paste a screenshot (Ctrl+V), or use Quick Fixes. I can also generate helpful diagrams and visual aids.",
+      content: "Hi! I'm MyTech-Fix. I can help with tech troubleshooting, device setup, productivity tasks, and general guidance on cybersecurity events. Describe your issue, paste a screenshot (Ctrl+V), tap the mic to speak, or use Quick Fixes. I can also generate helpful diagrams and visual aids.",
       timestamp: new Date()
     }
   ]);
@@ -41,15 +43,35 @@ function ChatContent() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [userTeams, setUserTeams] = useState<any[]>([]);
+  // Lightweight refs for UI (full shapes come from Supabase joins with extra fields like role/device_type/assigned_to)
+  interface TeamRef { id: string; name?: string; role?: string; [k: string]: any }
+  interface DeviceRef { id: string; name?: string; device_type?: string | null; assigned_to?: string | null; [k: string]: any }
+  interface MemberRef { id: string; full_name?: string | null; email?: string; name?: string; [k: string]: any }
+
+  const [userTeams, setUserTeams] = useState<TeamRef[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  const [userDevices, setUserDevices] = useState<any[]>([]);
+  const [userDevices, setUserDevices] = useState<DeviceRef[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<MemberRef[]>([]);
   const [userTier, setUserTier] = useState<string>('free_trial');
+
+  // Injected diagnostic report context (from ?diagnostic=ID or future picker).
+  // We keep the raw row for the structured payload to the backend (so the model sees accurate metrics).
+  // A formatted version is shown as a visible message bubble.
+  const [injectedDiagnosticContext, setInjectedDiagnosticContext] = useState<any>(null);
+
+  // Voice-to-text (Web Speech API)
+  const [isListening, setIsListening] = useState(false);
+  // Start as false so server render and initial client render match (avoids hydration mismatch).
+  // We detect actual browser support in a useEffect after mount.
+  const [isSpeechSupported, setIsSpeechSupported] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const chatChannelRef = useRef<any>(null);
+
+  const router = useRouter();
 
   // Handle "What can you help me fix?" button
   const handleShowCapabilities = () => {
@@ -61,11 +83,149 @@ function ChatContent() {
     }, 50);
   };
 
+  // ========== Voice-to-Text (SpeechRecognition) ==========
+  const toggleVoiceInput = () => {
+    if (!isSpeechSupported) {
+      toast.error("Voice input is not supported in this browser. Try Chrome or Edge.");
+      return;
+    }
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  const startListening = () => {
+    try {
+      const SpeechRecognitionAPI =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+      if (!SpeechRecognitionAPI) {
+        toast.error("Voice input not available.");
+        return;
+      }
+
+      // Always create a fresh SpeechRecognition instance when the user
+      // explicitly starts listening. Reusing a previous instance after
+      // errors (especially during Fast Refresh or after 'no-speech') is
+      // a common source of repeated "SpeechRecognitionErrorEvent".
+      const recognition = new SpeechRecognitionAPI();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        const newText = finalTranscript || interimTranscript;
+        if (newText) {
+          setInput(newText.trim());
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        const errorType = event?.error || 'unknown';
+        const errorMsg = event?.message || '';
+
+        if (errorType === 'aborted') {
+          setIsListening(false);
+          return;
+        }
+
+        console.warn('Speech recognition error:', errorType, errorMsg);
+
+        if (errorType === 'not-allowed' || errorType === 'permission-denied') {
+          toast.error("Microphone access denied. Please allow mic permission in your browser.");
+        } else if (errorType === 'no-speech') {
+          // Silent for continuous mode — the indicator already shows we're listening.
+        } else if (errorType === 'audio-capture') {
+          toast.error("Could not access your microphone. Check your device settings.");
+        } else {
+          toast.error("Voice input ran into a problem.");
+        }
+
+        setIsListening(false);
+        recognitionRef.current = null;
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+        // Clear the ref so the next tap creates a clean instance.
+        recognitionRef.current = null;
+      };
+
+      recognitionRef.current = recognition;
+
+      try {
+        recognition.start();
+        setIsListening(true);
+      } catch (startErr) {
+        console.error('Failed to start SpeechRecognition:', startErr);
+        toast.error("Could not start voice input.");
+        setIsListening(false);
+        recognitionRef.current = null;
+      }
+    } catch (err) {
+      console.warn('Failed to start voice input:', err);
+      toast.error("Could not start voice input.");
+      setIsListening(false);
+      recognitionRef.current = null;
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // ignore
+      }
+      recognitionRef.current = null;
+    }
+    setIsListening(false);
+  };
+  // ========== End Voice-to-Text ==========
+
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Cleanup voice recognition on unmount (important for Fast Refresh / HMR)
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // ignore
+        }
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+    };
+  }, []);
+
+  // Detect speech support only on the client after mount.
+  // This prevents hydration mismatch because the server always sees the initial `false` state.
+  useEffect(() => {
+    const supported =
+      typeof window !== 'undefined' &&
+      ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+    setIsSpeechSupported(supported);
+  }, []);
 
   // Load previous chat
   useEffect(() => {
@@ -200,7 +360,7 @@ function ChatContent() {
           .from('team_members')
           .select(`
             user_id,
-            profiles:user_id (
+            profiles!inner (
               id,
               full_name,
               email
@@ -221,6 +381,127 @@ function ChatContent() {
     };
     loadTeamMembers();
   }, [selectedTeamId]);
+
+  // Auto-inject diagnostic report when ?diagnostic=ID is present (one-time per navigation).
+  // Fetches the authoritative row (RLS ensures only owner), adds a visible context bubble,
+  // and stores the raw data so the next send can pass structured context to the model.
+  useEffect(() => {
+    const injectDiagnostic = async () => {
+      if (!diagnosticParam) return;
+
+      // Avoid re-injecting if we already processed this id (or if a previous session load already has it)
+      if (injectedDiagnosticContext?.id === diagnosticParam) return;
+
+      try {
+        const { data: diag } = await supabaseBrowser
+          .from('user_diagnostics')
+          .select('*')
+          .eq('id', diagnosticParam)
+          .maybeSingle();
+
+        if (!diag) {
+          console.warn('Diagnostic not found or not accessible for injection:', diagnosticParam);
+          // Clean the param so we don't keep trying
+          router.replace(window.location.pathname + (sessionParam ? `?session=${sessionParam}` : ''));
+          return;
+        }
+
+        // Build a nice visible report bubble using the shared formatter (exact same logic used on the server for the model).
+        const formatted = formatDiagnosticReportForChat(diag.results, diag.ai_analysis, diag.run_type);
+
+        const contextMessage: Message = {
+          id: `diag-${diag.id}`,
+          role: 'assistant',
+          content: `📊 ${formatted}\n\n(Report injected from your diagnostics. Ask away — the AI has the full structured data.)`,
+          timestamp: new Date(diag.created_at || Date.now()),
+        };
+
+        // Prepend the context (after welcome if present) so it's early in the conversation
+        setMessages((prev) => {
+          const hasContextAlready = prev.some((m) => m.id === contextMessage.id);
+          if (hasContextAlready) return prev;
+          // Keep the welcome first if it's there, then our report, then the rest
+          const welcome = prev.find((m) => m.id === 'welcome');
+          const rest = prev.filter((m) => m.id !== 'welcome');
+          return welcome ? [welcome, contextMessage, ...rest] : [contextMessage, ...rest];
+        });
+
+        // Keep the raw for the payload (so /api/chat can give the model accurate numbers, not just the text we showed the user)
+        setInjectedDiagnosticContext({
+          id: diag.id,
+          results: diag.results,
+          analysis: diag.ai_analysis,
+          run_type: diag.run_type,
+        });
+
+        // Clean the URL param (preserve session if we also navigated with one)
+        const base = window.location.pathname;
+        const qs = sessionParam ? `?session=${sessionParam}` : '';
+        router.replace(base + qs);
+      } catch (err) {
+        console.error('Failed to load/inject diagnostic into chat:', err);
+      }
+    };
+
+    injectDiagnostic();
+    // Only react to the param changing (and session for qs cleanup). We intentionally omit messages to avoid loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [diagnosticParam, sessionParam]);
+
+  // Realtime updates for the current chat session using Supabase
+  // This allows live messages from other team members (or other tabs) to appear without refresh.
+  useEffect(() => {
+    if (!sessionId) {
+      // Clean up previous channel if session was cleared
+      if (chatChannelRef.current) {
+        supabaseBrowser.removeChannel(chatChannelRef.current);
+        chatChannelRef.current = null;
+      }
+      return;
+    }
+
+    const channel = supabaseBrowser
+      .channel(`chat-session-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const row = payload.new as any;
+
+          setMessages((prev) => {
+            // Deduplicate: the sender already optimistically added their own message,
+            // and realtime will echo it back. Also safe for cross-client.
+            if (prev.some((m) => m.id === row.id)) return prev;
+
+            return [
+              ...prev,
+              {
+                id: row.id,
+                role: row.role as 'user' | 'assistant',
+                content: row.content,
+                imageUrl: row.image_url || undefined,
+                timestamp: new Date(row.created_at),
+              },
+            ];
+          });
+        }
+      )
+      .subscribe();
+
+    chatChannelRef.current = channel;
+
+    return () => {
+      if (chatChannelRef.current) {
+        supabaseBrowser.removeChannel(chatChannelRef.current);
+        chatChannelRef.current = null;
+      }
+    };
+  }, [sessionId]);
 
   // Paste image support
   useEffect(() => {
@@ -282,6 +563,11 @@ function ChatContent() {
 
   const sendMessage = async (options?: { forceVisualPrompt?: string }) => {
     if ((!input.trim() && !selectedImage && !options?.forceVisualPrompt) || isLoading) return;
+
+    // Stop any active voice recognition when sending
+    if (isListening) {
+      stopListening();
+    }
 
     // === STRONG TIER ENFORCEMENT (fast client pre-check; server is authoritative for count + increment) ===
     try {
@@ -387,6 +673,27 @@ function ChatContent() {
 
       currentSessionId = newSession?.id || null;
       setSessionId(currentSessionId);
+
+      // Persist the injected diagnostic report bubble as its own message row so future ?session reloads restore it.
+      // We do this only on session creation (first turn after injection).
+      if (currentSessionId && injectedDiagnosticContext) {
+        try {
+          const reportText = formatDiagnosticReportForChat(
+            injectedDiagnosticContext.results,
+            injectedDiagnosticContext.analysis,
+            injectedDiagnosticContext.run_type
+          );
+          await supabaseBrowser.from('chat_messages').insert({
+            session_id: currentSessionId,
+            user_id: (await supabaseBrowser.auth.getUser()).data.user?.id,
+            role: 'assistant',
+            content: `📊 ${reportText}\n\n(Report injected from diagnostics.)`,
+          });
+        } catch (e) {
+          // Non-fatal: the local bubble is still visible for this session, and the structured context went with the turn.
+          console.warn('Could not persist injected diagnostic context message (non-fatal):', e);
+        }
+      }
     }
 
     // Only persist a user message row for normal interactions
@@ -415,6 +722,12 @@ function ChatContent() {
 
       if (options?.forceVisualPrompt) {
         payload.generateVisualPrompt = options.forceVisualPrompt;
+      }
+
+      // If we have an injected diagnostic report, pass the structured data (id + raw results + prior analysis).
+      // The backend will turn this into high-signal context for the model (more reliable than text history alone).
+      if (injectedDiagnosticContext) {
+        payload.diagnosticContext = injectedDiagnosticContext;
       }
 
       const response = await fetch('/api/chat', {
@@ -797,6 +1110,14 @@ function ChatContent() {
               </div>
             )}
 
+            {/* Voice listening indicator */}
+            {isListening && (
+              <div className="max-w-3xl mx-auto mb-2 flex items-center gap-2 text-sm text-red-500">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                Listening... (tap mic to stop)
+              </div>
+            )}
+
             {/* Capabilities Button + Quick Usage */}
             <div className="max-w-3xl mx-auto mb-2 flex items-center justify-between gap-2">
               <Button 
@@ -826,11 +1147,28 @@ function ChatContent() {
                 className="hidden"
               />
 
+              {/* Voice-to-text button (client-only support detection to avoid hydration mismatch) */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={toggleVoiceInput}
+                disabled={!isSpeechSupported}
+                className={`border-white/10 hover:bg-white/5 ${isListening ? 'bg-red-500/10 text-red-500 border-red-500/30' : ''}`}
+                aria-label={isListening ? "Stop voice input" : "Start voice input"}
+                title={isSpeechSupported 
+                  ? (isListening ? "Stop listening" : "Speak your message (voice to text)") 
+                  : "Voice input not supported in this browser"}
+                // suppressHydrationWarning is not needed here because we initialize the state to false (matching SSR)
+                // and only update it in a useEffect after mount.
+              >
+                <Mic className={`w-5 h-5 ${isListening ? 'animate-pulse' : ''}`} />
+              </Button>
+
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="Describe issue or paste screenshot (Ctrl+V)..."
+                placeholder="Describe issue, paste screenshot (Ctrl+V), or tap mic to speak..."
                 className="flex-1 bg-background border-white/10"
               />
 

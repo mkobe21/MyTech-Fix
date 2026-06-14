@@ -26,8 +26,10 @@ export async function generateImage(prompt: string): Promise<string | null> {
     return null;
   }
 
-  // Safe diagnostic (never full key)
-  console.log(`[image-gen] Using provider=${provider} (key len=${apiKey.length}, prefix=${apiKey.slice(0,6)}...)`);
+  // Dev-only diagnostic (never log full key)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[image-gen] Using provider=${provider} (key len=${apiKey.length}, prefix=${apiKey.slice(0,6)}...)`);
+  }
 
   // Strengthen prompt for spelling/quality (critical for troubleshooting diagrams)
   const spellingBooster = " . All text, labels, button names, port labels, arrows, and annotations MUST be spelled 100% correctly with perfectly legible sans-serif text. No misspellings, no garbled letters, no hallucinations on words. Clean technical schematic / instruction manual style, high contrast, precise details, educational clarity.";
@@ -89,7 +91,7 @@ export async function generateImage(prompt: string): Promise<string | null> {
 
     const data = await res.json();
     const url = data?.data?.[0]?.url || (data?.data?.[0]?.b64_json ? `data:image/png;base64,${data.data[0].b64_json}` : null);
-    if (url) {
+    if (url && process.env.NODE_ENV !== 'production') {
       console.log(`[image-gen] Success via ${provider} (model: ${provider === 'xai' ? (process.env.XAI_IMAGE_MODEL || 'grok-imagine-image-quality') : 'dall-e-3'})`);
     }
     return url;
