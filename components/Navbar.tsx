@@ -14,6 +14,7 @@ const AUTH_LINKS = [
 const PUBLIC_LINKS = [
   { href: '/how-it-works', label: 'How it Works' },
   { href: '/what-we-fix', label: 'What We Fix' },
+  { href: '/fix', label: 'Guides' },
   { href: '/pricing', label: 'Pricing' },
 ];
 

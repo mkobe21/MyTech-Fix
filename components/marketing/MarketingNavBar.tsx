@@ -9,6 +9,7 @@ import AuthModal from '@/components/AuthModal';
 const NAV_LINKS = [
   { href: '/how-it-works', label: 'How it Works' },
   { href: '/what-we-fix', label: 'What We Fix' },
+  { href: '/fix', label: 'Guides' },
   { href: '/pricing', label: 'Pricing' },
 ];
 

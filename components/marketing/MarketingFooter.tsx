@@ -14,6 +14,7 @@ export default function MarketingFooter() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-x-7 gap-y-2 text-sm text-slate-400">
+          <Link href="/fix" className="hover:text-slate-200 transition-colors">Guides</Link>
           <Link href="/privacy" className="hover:text-slate-200 transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-slate-200 transition-colors">Terms</Link>
           <Link href="/support" className="hover:text-slate-200 transition-colors">Support</Link>
