@@ -80,5 +80,69 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    // HP OfficeJet brand hub
+    {
+      url: `${base}/fix/printers/hp-officejet`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    // HP OfficeJet guides
+    {
+      url: `${base}/fix/printers/hp-officejet/offline`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/printers/hp-officejet/wont-print`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/printers/hp-officejet/wont-connect-to-wifi`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/printers/hp-officejet/print-queue-stuck`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    // Canon PIXMA brand hub
+    {
+      url: `${base}/fix/printers/canon-pixma`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    // Canon PIXMA guides
+    {
+      url: `${base}/fix/printers/canon-pixma/offline`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/printers/canon-pixma/wont-print`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/printers/canon-pixma/wont-connect-to-wifi`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/printers/canon-pixma/print-queue-stuck`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
   ];
 }

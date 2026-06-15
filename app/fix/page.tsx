@@ -44,9 +44,13 @@ const CATEGORIES = [
     icon: Printer,
     name: 'Printers',
     description: 'Offline printers, driver issues, scan & print setup, and wireless pairing.',
-    guideCount: 0,
+    guideCount: 8,
     href: null,
-    enabled: false,
+    enabled: true,
+    subLinks: [
+      { label: 'HP OfficeJet', href: '/fix/printers/hp-officejet', count: 4 },
+      { label: 'Canon PIXMA', href: '/fix/printers/canon-pixma', count: 4 },
+    ],
   },
   {
     icon: Home,
