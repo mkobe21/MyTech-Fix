@@ -129,23 +129,23 @@ const FAQS = [
 const RELATED = [
   {
     category: 'Netgear Orbi',
+    title: "Orbi Won't Connect to App",
+    href: '/fix/wifi/netgear-orbi/wont-connect-to-app',
+  },
+  {
+    category: 'Netgear Orbi',
+    title: 'Orbi Keeps Disconnecting',
+    href: '/fix/wifi/netgear-orbi/keeps-disconnecting',
+  },
+  {
+    category: 'Netgear Orbi',
+    title: 'Orbi Slow Speeds',
+    href: '/fix/wifi/netgear-orbi/slow-speeds',
+  },
+  {
+    category: 'Orbi Guides',
     title: 'All Orbi troubleshooting guides →',
     href: '/fix/wifi/netgear-orbi',
-  },
-  {
-    category: 'Eero WiFi',
-    title: 'Eero 6 Red Light Blinking',
-    href: '/fix/wifi/eero-6/red-light-blinking',
-  },
-  {
-    category: 'Eero WiFi',
-    title: 'Eero 6 Keeps Disconnecting',
-    href: '/fix/wifi/eero-6/keeps-disconnecting',
-  },
-  {
-    category: 'All Guides',
-    title: 'Browse all WiFi guides →',
-    href: '/fix',
   },
 ];
 

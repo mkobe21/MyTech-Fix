@@ -30,6 +30,27 @@ const ORBI_GUIDES = [
     href: '/fix/wifi/netgear-orbi/red-light-blinking',
     time: '10 min fix',
   },
+  {
+    title: "Netgear Orbi Won't Connect to the App",
+    description:
+      "App can't find your router? Your phone's network connection is almost always the culprit — not the router itself.",
+    href: '/fix/wifi/netgear-orbi/wont-connect-to-app',
+    time: '5 min fix',
+  },
+  {
+    title: 'Netgear Orbi Keeps Disconnecting',
+    description:
+      'Random drops are almost always firmware or interference. Here\'s how to tell which — and how to fix it without a factory reset.',
+    href: '/fix/wifi/netgear-orbi/keeps-disconnecting',
+    time: '10 min fix',
+  },
+  {
+    title: 'Netgear Orbi Slow Speeds',
+    description:
+      'Start with an Ethernet test to the modem to rule out your ISP, then check the band your device is on and your satellite backhaul strength.',
+    href: '/fix/wifi/netgear-orbi/slow-speeds',
+    time: '5 min fix',
+  },
 ];
 
 export default function NetgearOrbiHubPage() {
@@ -77,8 +98,8 @@ export default function NetgearOrbiHubPage() {
 
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 mb-12 text-sm text-slate-400 leading-relaxed">
           <span className="font-semibold text-slate-300">More Orbi guides coming soon.</span>{' '}
-          We&apos;re adding coverage for satellite placement, slow backhaul speeds, double NAT with
-          ISP-provided modems, and Orbi app setup. Can&apos;t find your issue?{' '}
+          We&apos;re adding coverage for double NAT with ISP-provided modems, satellite placement
+          optimization, and Orbi Pro for business users. Can&apos;t find your issue?{' '}
           <Link href="/chat" className="text-blue-400 hover:text-blue-300 transition-colors">
             Ask our AI directly →
           </Link>

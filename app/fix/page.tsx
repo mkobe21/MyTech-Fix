@@ -32,12 +32,12 @@ const CATEGORIES = [
     icon: Wifi,
     name: 'WiFi & Networking',
     description: 'Router issues, mesh setup, slow speeds, dead zones, and DNS problems.',
-    guideCount: 5,
+    guideCount: 8,
     href: null,
     enabled: true,
     subLinks: [
       { label: 'Eero', href: '/fix/wifi/eero', count: 4 },
-      { label: 'Netgear Orbi', href: '/fix/wifi/netgear-orbi', count: 1 },
+      { label: 'Netgear Orbi', href: '/fix/wifi/netgear-orbi', count: 4 },
     ],
   },
   {
