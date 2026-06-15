@@ -144,5 +144,69 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    // Nest Thermostat brand hub
+    {
+      url: `${base}/fix/smart-home/nest-thermostat`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    // Nest Thermostat guides
+    {
+      url: `${base}/fix/smart-home/nest-thermostat/offline`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/nest-thermostat/wont-connect-to-wifi`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/nest-thermostat/not-responding-in-app`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/nest-thermostat/firmware-update-stuck`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    // Ring Doorbell brand hub
+    {
+      url: `${base}/fix/smart-home/ring-doorbell`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    // Ring Doorbell guides
+    {
+      url: `${base}/fix/smart-home/ring-doorbell/offline`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/ring-doorbell/wont-connect-to-wifi`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/ring-doorbell/motion-detection-not-working`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/ring-doorbell/battery-draining-fast`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
   ];
 }

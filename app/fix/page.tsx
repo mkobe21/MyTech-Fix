@@ -56,9 +56,13 @@ const CATEGORIES = [
     icon: Home,
     name: 'Smart Home',
     description: 'Smart lights, cameras, plugs, hubs, and voice assistant setup.',
-    guideCount: 0,
+    guideCount: 8,
     href: null,
-    enabled: false,
+    enabled: true,
+    subLinks: [
+      { label: 'Nest Thermostat', href: '/fix/smart-home/nest-thermostat', count: 4 },
+      { label: 'Ring Doorbell', href: '/fix/smart-home/ring-doorbell', count: 4 },
+    ],
   },
   {
     icon: Monitor,
