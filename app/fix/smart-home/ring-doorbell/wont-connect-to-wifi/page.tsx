@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/fix' },
+  { label: 'Smart Home', href: '/fix/smart-home' },
   { label: 'Ring Doorbell', href: '/fix/smart-home/ring-doorbell' },
   { label: "Ring Doorbell Won't Connect to WiFi" },
 ];

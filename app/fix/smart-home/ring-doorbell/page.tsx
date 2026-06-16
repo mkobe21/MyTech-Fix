@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/fix' },
+  { label: 'Smart Home', href: '/fix/smart-home' },
   { label: 'Ring Doorbell' },
 ];
 
@@ -106,7 +107,22 @@ export default function RingDoorbellHubPage() {
           </div>
         </section>
 
-        <div className="mt-12 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-6 py-6 text-center">
+        <div className="mt-8 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+            Cross-Ecosystem
+          </p>
+          <Link
+            href="/fix/smart-home/ring-doorbell-not-working-with-alexa"
+            className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] hover:border-blue-500/20 hover:bg-blue-500/5 px-4 py-3 transition-all group"
+          >
+            <span className="text-sm text-slate-300 group-hover:text-blue-300 transition-colors">
+              Ring Doorbell Not Working with Alexa
+            </span>
+            <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-blue-400 flex-shrink-0" />
+          </Link>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-6 py-6 text-center">
           <h2 className="font-sora text-xl font-bold text-slate-100 mb-2">
             Still having trouble with your Ring Doorbell?
           </h2>
@@ -125,10 +141,10 @@ export default function RingDoorbellHubPage() {
 
         <div className="mt-8 text-center">
           <Link
-            href="/fix"
+            href="/fix/smart-home"
             className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
           >
-            ← All troubleshooting guides
+            ← Smart Home guides
           </Link>
         </div>
       </div>

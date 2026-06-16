@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/fix' },
+  { label: 'WiFi & Networking', href: '/fix/wifi' },
   { label: 'Netgear Orbi', href: '/fix/wifi/netgear-orbi' },
   { label: 'Orbi Red Light or Red Ring' },
 ];

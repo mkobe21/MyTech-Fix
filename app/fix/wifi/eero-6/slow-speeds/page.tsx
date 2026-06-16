@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/fix' },
+  { label: 'WiFi & Networking', href: '/fix/wifi' },
   { label: 'Eero', href: '/fix/wifi/eero' },
   { label: 'Eero 6 Slow Speeds' },
 ];

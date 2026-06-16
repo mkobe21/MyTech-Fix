@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/fix' },
+  { label: 'Printers', href: '/fix/printers' },
   { label: 'HP OfficeJet', href: '/fix/printers/hp-officejet' },
   { label: "HP OfficeJet Won't Print" },
 ];

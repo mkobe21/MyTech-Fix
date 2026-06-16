@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/fix' },
+  { label: 'Printers', href: '/fix/printers' },
   { label: 'Canon PIXMA' },
 ];
 
@@ -125,10 +126,10 @@ export default function CanonPixmaHubPage() {
 
         <div className="mt-8 text-center">
           <Link
-            href="/fix"
+            href="/fix/printers"
             className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
           >
-            ← All troubleshooting guides
+            ← Printer guides
           </Link>
         </div>
       </div>

@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/fix' },
+  { label: 'Printers', href: '/fix/printers' },
   { label: 'Canon PIXMA', href: '/fix/printers/canon-pixma' },
   { label: "Canon PIXMA Won't Connect to WiFi" },
 ];

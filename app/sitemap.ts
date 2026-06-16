@@ -16,6 +16,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
+    // WiFi & Networking category hub
+    {
+      url: `${base}/fix/wifi`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
     // Eero brand hub
     {
       url: `${base}/fix/wifi/eero`,
@@ -79,6 +86,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
+    },
+    // Printers category hub
+    {
+      url: `${base}/fix/printers`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
     },
     // HP OfficeJet brand hub
     {
@@ -144,6 +158,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    // Smart Home category hub
+    {
+      url: `${base}/fix/smart-home`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
     // Nest Thermostat brand hub
     {
       url: `${base}/fix/smart-home/nest-thermostat`,
@@ -204,6 +225,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${base}/fix/smart-home/ring-doorbell/battery-draining-fast`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    // Smart Home cross-ecosystem guides
+    {
+      url: `${base}/fix/smart-home/nest-thermostat-not-showing-in-google-home`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/ring-doorbell-not-working-with-alexa`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/philips-hue-not-syncing-with-homekit`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/ecobee-not-working-with-google-home`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/smart-home/wyze-cam-not-working-with-google-home`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,

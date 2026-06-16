@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/fix' },
+  { label: 'Smart Home', href: '/fix/smart-home' },
   { label: 'Nest Thermostat', href: '/fix/smart-home/nest-thermostat' },
   { label: 'Nest Thermostat Offline' },
 ];
