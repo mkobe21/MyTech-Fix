@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 const BREADCRUMBS = [
   { label: 'Home', href: '/' },
   { label: 'Guides', href: '/fix' },
+  { label: 'Computers', href: '/fix/computers' },
   { label: 'Windows', href: '/fix/computers/windows' },
   { label: 'WiFi Keeps Disconnecting' },
 ];
@@ -129,23 +130,23 @@ const FAQS = [
 const RELATED = [
   {
     category: 'Windows',
-    title: 'Windows Running Slow? How to Speed It Up',
+    title: 'Windows Running Slow',
     href: '/fix/computers/windows/running-slow',
   },
   {
-    category: 'WiFi',
-    title: 'Eero 6 Keeps Disconnecting',
-    href: '/fix/wifi/eero-6/keeps-disconnecting',
+    category: 'Windows',
+    title: 'Windows Blue Screen Error',
+    href: '/fix/computers/windows/blue-screen-error',
   },
   {
-    category: 'WiFi',
-    title: 'Eero 6 Slow Speeds',
-    href: '/fix/wifi/eero-6/slow-speeds',
+    category: 'Windows',
+    title: "Windows Won't Install Updates",
+    href: '/fix/computers/windows/wont-install-updates',
   },
   {
-    category: 'AI Diagnosis',
-    title: "Can't find your issue? Ask our AI →",
-    href: '/chat',
+    category: 'Windows Guides',
+    title: 'All Windows troubleshooting guides →',
+    href: '/fix/computers/windows',
   },
 ];
 

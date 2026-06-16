@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Breadcrumb from '@/components/seo/Breadcrumb';
 import CategoryCard from '@/components/seo/CategoryCard';
+import GuidesSearch from '@/components/seo/GuidesSearch';
 import FinalCTA from '@/components/seo/FinalCTA';
 import {
   Wifi,
@@ -56,9 +57,9 @@ const CATEGORIES = [
     icon: Monitor,
     name: 'Computers',
     description: 'Windows & Mac issues, slow performance, crashes, and driver problems.',
-    guideCount: 0,
+    guideCount: 4,
     href: '/fix/computers',
-    enabled: false,
+    enabled: true,
   },
   {
     icon: Camera,
@@ -110,6 +111,8 @@ export default function FixHubPage() {
             by our AI.
           </p>
         </header>
+
+        <GuidesSearch />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
           {CATEGORIES.map((cat) => (
