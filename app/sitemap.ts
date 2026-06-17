@@ -299,5 +299,160 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    // VPN & Remote Work category hub
+    {
+      url: `${base}/fix/vpn-remote-work`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    // Windows VPN brand hub
+    {
+      url: `${base}/fix/vpn-remote-work/windows-vpn`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    // Windows VPN guides
+    {
+      url: `${base}/fix/vpn-remote-work/windows-vpn/wont-connect`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/vpn-remote-work/windows-vpn/keeps-disconnecting`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/vpn-remote-work/windows-vpn/slow-speeds`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/vpn-remote-work/windows-vpn/blocking-internet-access`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    // Security & Privacy category hub
+    {
+      url: `${base}/fix/security-privacy`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    // Security & Privacy guides
+    {
+      url: `${base}/fix/security-privacy/suspicious-login-alert`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/security-privacy/router-default-password-risk`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/security-privacy/smart-camera-privacy-settings`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/security-privacy/wifi-network-hacked-signs`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/security-privacy/two-factor-authentication-setup`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    // Phone & Tablet category hub
+    {
+      url: `${base}/fix/phone-tablet`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    // iPhone brand hub
+    {
+      url: `${base}/fix/phone-tablet/iphone`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    // iPhone guides
+    {
+      url: `${base}/fix/phone-tablet/iphone/wont-connect-to-wifi`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/phone-tablet/iphone/bluetooth-wont-pair`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/phone-tablet/iphone/battery-draining-fast`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/phone-tablet/iphone/storage-full-error`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    // Security Cameras category hub
+    {
+      url: `${base}/fix/security-cameras`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    // Ring Camera brand hub
+    {
+      url: `${base}/fix/security-cameras/ring-camera`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    // Ring Camera guides
+    {
+      url: `${base}/fix/security-cameras/ring-camera/offline`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/security-cameras/ring-camera/no-video-feed`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/security-cameras/ring-camera/motion-alerts-not-working`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/fix/security-cameras/ring-camera/night-vision-not-working`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
   ];
 }

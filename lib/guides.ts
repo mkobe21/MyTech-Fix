@@ -214,4 +214,114 @@ export const guides: Guide[] = [
     href: '/fix/computers/windows/wont-install-updates',
     keywords: ['windows', 'update', "won't install"],
   },
+
+  // VPN & Remote Work
+  {
+    title: "Windows VPN Won't Connect",
+    category: 'VPN & Remote Work',
+    href: '/fix/vpn-remote-work/windows-vpn/wont-connect',
+    keywords: ['vpn', 'windows', "won't connect"],
+  },
+  {
+    title: 'Windows VPN Keeps Disconnecting',
+    category: 'VPN & Remote Work',
+    href: '/fix/vpn-remote-work/windows-vpn/keeps-disconnecting',
+    keywords: ['vpn', 'windows', 'disconnecting'],
+  },
+  {
+    title: 'Windows VPN Slow Speeds',
+    category: 'VPN & Remote Work',
+    href: '/fix/vpn-remote-work/windows-vpn/slow-speeds',
+    keywords: ['vpn', 'windows', 'slow'],
+  },
+  {
+    title: 'VPN Blocking Internet Access',
+    category: 'VPN & Remote Work',
+    href: '/fix/vpn-remote-work/windows-vpn/blocking-internet-access',
+    keywords: ['vpn', 'blocking', 'internet', 'no access'],
+  },
+
+  // Security & Privacy
+  {
+    title: 'Suspicious Login Alert — What to Do',
+    category: 'Security & Privacy',
+    href: '/fix/security-privacy/suspicious-login-alert',
+    keywords: ['suspicious', 'login', 'alert', 'security'],
+  },
+  {
+    title: 'Router Default Password Risk',
+    category: 'Security & Privacy',
+    href: '/fix/security-privacy/router-default-password-risk',
+    keywords: ['router', 'password', 'default', 'security'],
+  },
+  {
+    title: 'Smart Camera Privacy Settings Checklist',
+    category: 'Security & Privacy',
+    href: '/fix/security-privacy/smart-camera-privacy-settings',
+    keywords: ['camera', 'privacy', 'settings', 'checklist'],
+  },
+  {
+    title: 'Signs Your WiFi Has Been Hacked',
+    category: 'Security & Privacy',
+    href: '/fix/security-privacy/wifi-network-hacked-signs',
+    keywords: ['wifi', 'hacked', 'security', 'signs'],
+  },
+  {
+    title: 'How to Set Up Two-Factor Authentication',
+    category: 'Security & Privacy',
+    href: '/fix/security-privacy/two-factor-authentication-setup',
+    keywords: ['two-factor', '2fa', 'authentication', 'security'],
+  },
+
+  // Phone & Tablet
+  {
+    title: "iPhone Won't Connect to WiFi",
+    category: 'Phone & Tablet',
+    href: '/fix/phone-tablet/iphone/wont-connect-to-wifi',
+    keywords: ['iphone', 'wifi', "won't connect"],
+  },
+  {
+    title: "iPhone Bluetooth Won't Pair",
+    category: 'Phone & Tablet',
+    href: '/fix/phone-tablet/iphone/bluetooth-wont-pair',
+    keywords: ['iphone', 'bluetooth', 'pair', 'pairing'],
+  },
+  {
+    title: 'iPhone Battery Draining Fast',
+    category: 'Phone & Tablet',
+    href: '/fix/phone-tablet/iphone/battery-draining-fast',
+    keywords: ['iphone', 'battery', 'draining'],
+  },
+  {
+    title: 'iPhone Storage Full',
+    category: 'Phone & Tablet',
+    href: '/fix/phone-tablet/iphone/storage-full-error',
+    keywords: ['iphone', 'storage', 'full', 'space'],
+  },
+
+  // Security Cameras
+  {
+    title: 'Ring Camera Offline',
+    category: 'Security Cameras',
+    href: '/fix/security-cameras/ring-camera/offline',
+    keywords: ['ring', 'camera', 'offline', 'security'],
+  },
+  {
+    title: 'Ring Camera No Video Feed',
+    category: 'Security Cameras',
+    href: '/fix/security-cameras/ring-camera/no-video-feed',
+    keywords: ['ring', 'camera', 'no video', 'feed'],
+  },
+  {
+    title: 'Ring Camera Motion Alerts Not Working',
+    category: 'Security Cameras',
+    href: '/fix/security-cameras/ring-camera/motion-alerts-not-working',
+    keywords: ['ring', 'camera', 'motion', 'alerts'],
+  },
+  {
+    title: 'Ring Camera Night Vision Not Working',
+    category: 'Security Cameras',
+    href: '/fix/security-cameras/ring-camera/night-vision-not-working',
+    keywords: ['ring', 'camera', 'night vision'],
+  },
 ];
