@@ -6,7 +6,7 @@ import { supabaseBrowser } from '@/lib/supabase';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Clock, Search, Filter, ArrowRight, Trash2, ArrowUpDown, Download } from 'lucide-react';
+import { Clock, Search, Filter, ArrowRight, Trash2, ArrowUpDown, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -321,29 +321,6 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <nav className="border-b border-white/[0.07] bg-[#0A0F1E]/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-100 transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-              Dashboard
-            </Link>
-            <div className="h-5 w-px bg-white/[0.07]" />
-            <div>
-              <h1 className="font-sora text-lg font-bold text-slate-50 tracking-tight">Chat History</h1>
-              <p className="text-xs text-slate-500">All your troubleshooting sessions</p>
-            </div>
-          </div>
-
-          <Link href="/chat">
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-5">
-              New Session
-            </Button>
-          </Link>
-        </div>
-      </nav>
-
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
@@ -354,15 +331,22 @@ export default function HistoryPage() {
             </div>
           </div>
 
-          <Button 
-            onClick={handleExportCSV} 
-            variant="outline"
-            className="gap-2 border-white/10 hover:bg-white/5"
-            disabled={loading || sessions.length === 0}
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/chat">
+              <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-5">
+                New Chat
+              </Button>
+            </Link>
+            <Button
+              onClick={handleExportCSV}
+              variant="outline"
+              className="gap-2 border-white/10 hover:bg-white/5"
+              disabled={loading || sessions.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}

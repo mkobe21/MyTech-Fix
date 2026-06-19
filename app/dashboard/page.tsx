@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, Monitor, Smartphone, Home, ArrowRight, Plus, RefreshCw, Clock, Zap, Users, BarChart3, Database, Activity, Globe, Server, MessageCircle, HeartPulse } from 'lucide-react';
+import { Wifi, Monitor, Smartphone, Home, ArrowRight, Plus, RefreshCw, Clock, Zap, Users, BarChart3, Database, Activity, Globe, Server, MessageCircle, HeartPulse, Sparkles } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { supabaseBrowser } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,6 @@ import { toast } from 'sonner';
 import { runFullDiagnostic, getStatusColor, type FullDiagnosticResults, type TestStatus, analyzeWifiChannels, type WifiChannelScanResult } from '@/lib/diagnostics';
 import { DiagnosticResultsViewer } from '@/components/DiagnosticResultsViewer';
 import { WifiChannelVisualizer } from '@/components/WifiChannelVisualizer';
-import Navbar from '@/components/Navbar';
 import PlanBadge from '@/components/PlanBadge';
 
 interface ChatSession {
@@ -629,7 +628,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Hero Header */}
@@ -1049,6 +1047,23 @@ export default function Dashboard() {
                   </motion.div>
                 </Link>
               ))}
+
+              {/* Productivity quick start — Home plan and above */}
+              {tier !== 'free_trial' && tier !== 'single_use' && (
+                <Link href="/productivity">
+                  <motion.div variants={fadeInUp} className="group h-full card-premium border border-violet-500/20 hover:border-violet-500/40 bg-violet-500/5 rounded-2xl p-5 transition-all flex flex-col">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 group-hover:bg-violet-500/20 transition-colors mb-4">
+                      <Sparkles className="h-5 w-5 text-violet-400 group-hover:text-violet-300" />
+                    </div>
+                    <div className="text-xs font-semibold text-violet-400 mb-1">Productivity</div>
+                    <h3 className="font-semibold text-[15px] mb-1">AI Productivity Tools</h3>
+                    <p className="text-sm text-muted-foreground flex-1">Excel formulas, Word docs, and device setup help</p>
+                    <div className="mt-3 text-xs font-medium text-violet-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Open tools <ArrowRight className="h-3 w-3" />
+                    </div>
+                  </motion.div>
+                </Link>
+              )}
 
               {/* Business-specific quick starts for business users */}
               {(tier === 'business' || tier === 'business_plus') && (

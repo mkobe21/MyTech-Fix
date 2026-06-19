@@ -25,10 +25,10 @@ function SignupContent() {
 
   const planInfo = {
     free: { name: "Free Trial", price: "0", desc: "1 Free Session" },
-    single: { name: "Single Use", price: "9.99", desc: "One Session" },
+    single: { name: "Single Use", price: "7.99", desc: "One Session" },
     home: { name: "Home Plan", price: "9.99", desc: "Monthly" },
     business: { name: "Small Business", price: "29.99", desc: "IT Support for up to 5 Team Members" },
-    business_plus: { name: "Small Business Plus", price: "59.99", desc: "IT Support for up to 15 Team Members" }
+    business_plus: { name: "Small Business Plus", price: "49.99", desc: "IT Support for up to 15 Team Members" }
   }[plan] || { name: "Plan", price: "", desc: "" };
 
   const { isValid: passwordIsValid } = validatePassword(password);

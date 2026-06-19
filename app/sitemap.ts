@@ -1,4 +1,28 @@
 import type { MetadataRoute } from 'next';
+import { DOC_SECTIONS } from '@/lib/docs-navigation';
+
+function buildDocsRoutes(base: string): MetadataRoute.Sitemap {
+  const routes: MetadataRoute.Sitemap = [
+    { url: `${base}/docs`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
+  ];
+  for (const section of DOC_SECTIONS) {
+    routes.push({
+      url: `${base}/docs/${section.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    });
+    for (const item of section.items) {
+      routes.push({
+        url: `${base}/docs/${item.slug}`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly',
+        priority: 0.7,
+      });
+    }
+  }
+  return routes;
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://mytech-fix.com';
@@ -429,6 +453,94 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
+    // Setup Guides hub
+    {
+      url: `${base}/setup`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    // Setup Guides detail pages
+    {
+      url: `${base}/setup/eero-6-mesh-network`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/setup/netgear-orbi-mesh-network`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/setup/nest-thermostat-with-google-home`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/setup/ring-doorbell-with-alexa`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/setup/philips-hue-starter-kit`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/setup/tp-link-deco-mesh`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/setup/ecobee-thermostat`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/setup/arlo-camera-system`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    // My Devices (personal device monitoring)
+    {
+      url: `${base}/my-devices`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    // Productivity hub + SEO landing pages
+    {
+      url: `${base}/productivity`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
+    {
+      url: `${base}/productivity/excel-formula-help`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/productivity/word-document-help`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${base}/productivity/new-device-setup-help`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
     // Ring Camera guides
     {
       url: `${base}/fix/security-cameras/ring-camera/offline`,
@@ -454,5 +566,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    ...buildDocsRoutes(base),
   ];
 }

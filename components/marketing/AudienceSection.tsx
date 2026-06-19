@@ -77,13 +77,21 @@ export default function AudienceSection() {
                 'Shared conversation history — no more "how did we fix the printer?"',
                 'Device inventory to track all hardware across locations',
                 'Team usage reports and time-saved analytics',
-                'Productivity tools: Excel formulas, email drafting, and more',
               ].map((f) => (
                 <li key={f} className="flex items-start gap-2.5">
                   <span className="text-blue-400 mt-0.5 flex-shrink-0">✓</span>
                   {f}
                 </li>
               ))}
+              <li className="flex items-start gap-2.5">
+                <span className="text-blue-400 mt-0.5 flex-shrink-0">✓</span>
+                <span>
+                  <Link href="/productivity" className="text-blue-400 hover:text-blue-300 transition-colors">
+                    Productivity tools
+                  </Link>
+                  : Excel formulas, email drafting, and more
+                </span>
+              </li>
             </ul>
             <Link
               href="/pricing"

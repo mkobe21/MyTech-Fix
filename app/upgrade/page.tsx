@@ -2,7 +2,6 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
-import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabaseBrowser } from '@/lib/supabase';
@@ -20,8 +19,8 @@ function UpgradeContent() {
 
   const selectedPlan = {
     name: getTierLabel(plan === 'free' ? 'free_trial' : plan === 'single' ? 'single_use' : plan === 'home' ? 'home' : plan === 'business_plus' ? 'business_plus' : 'business'),
-    price: plan === 'free' ? 0 : plan === 'single' ? 9.99 : plan === 'home' ? 9.99 : plan === 'business_plus' ? 59.99 : 29.99,
-    desc: plan === 'free' ? '1 Free Session' : plan === 'single' ? 'One Session' : plan === 'home' ? '$9.99/month' : plan === 'business_plus' ? '$59.99/month' : '$29.99/month',
+    price: plan === 'free' ? 0 : plan === 'single' ? 7.99 : plan === 'home' ? 9.99 : plan === 'business_plus' ? 49.99 : 29.99,
+    desc: plan === 'free' ? '1 Free Session' : plan === 'single' ? 'One Session' : plan === 'home' ? '$9.99/month' : plan === 'business_plus' ? '$49.99/month' : '$29.99/month',
   };
 
   useEffect(() => {
@@ -62,8 +61,6 @@ function UpgradeContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-
       <div className="max-w-lg mx-auto px-6 py-20 text-center">
         <h1 className="font-sora text-4xl font-bold text-slate-50 mb-3">Upgrade Your Plan</h1>
         <p className="text-slate-400 mb-10">

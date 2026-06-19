@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import Navbar from '@/components/Navbar';
 import PlanBadge from '@/components/PlanBadge';
 import { getTierLabel, pickHighestTier, getLimit, getImageLimit, getDiagnosticLimit } from '@/lib/tiers';
 import { ArrowLeft, Sun, Moon, Monitor, MessageSquare, History, Activity, Users, Database, Download } from 'lucide-react';
@@ -268,7 +267,6 @@ export default function AccountPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
         <div className="max-w-3xl mx-auto px-6 py-20">
           <div className="animate-pulse space-y-6">
             <div className="h-10 bg-white/10 rounded w-1/3" />
@@ -291,7 +289,6 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="max-w-3xl mx-auto px-6 py-12">
         <div className="mb-6">
           <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-primary hover:underline mb-4">

@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import Navbar from '@/components/Navbar';
 import { motion } from 'framer-motion';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 import { pickHighestTier } from '@/lib/tiers';
@@ -125,7 +124,6 @@ export default function TeamsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="max-w-6xl mx-auto px-6 py-8">
 
         {/* Upgrade gate for non-business tiers */}

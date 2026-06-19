@@ -123,6 +123,18 @@ export default function NestThermostatHubPage() {
           </Link>
         </div>
 
+        <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4 flex items-center justify-between gap-4">
+          <p className="text-sm text-slate-300">
+            <span className="font-semibold">Setting up a new Nest Thermostat?</span> See our step-by-step installation guide.
+          </p>
+          <Link
+            href="/setup/nest-thermostat-with-google-home"
+            className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 whitespace-nowrap transition-colors"
+          >
+            Setup guide →
+          </Link>
+        </div>
+
         <div className="mt-8 rounded-2xl border border-blue-500/20 bg-blue-500/5 px-6 py-6 text-center">
           <h2 className="font-sora text-xl font-bold text-slate-100 mb-2">
             Still having trouble with your Nest Thermostat?

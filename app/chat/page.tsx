@@ -15,6 +15,9 @@ import { messageIn } from '@/lib/animations';
 import { toast } from 'sonner';
 import { getLimit, getTierLabel, pickHighestTier } from '@/lib/tiers';
 import { formatDiagnosticReportForChat } from '@/lib/diagnostics';
+import { getProductivityTool } from '@/lib/productivity-prompts';
+import ProductivityModeBadge from '@/components/ProductivityModeBadge';
+import ProductivityExamples from '@/components/ProductivityExamples';
 
 interface Message {
   id: string;
@@ -33,6 +36,8 @@ function ChatContent() {
   const deviceNameParam = searchParams.get('device_name');
   const deviceTypeParam = searchParams.get('device_type');
   const deviceLocationParam = searchParams.get('device_location');
+  const toolParam = searchParams.get('tool');
+  const productivityTool = getProductivityTool(toolParam);
 
   const [messages, setMessages] = useState<Message[]>([
     { id: 'welcome', role: 'assistant', content: WELCOME_MESSAGE, timestamp: new Date() }
@@ -259,6 +264,12 @@ function ChatContent() {
           tier = pickHighestTier(prof?.tier, ut?.tier);
         } catch {}
         setUserTier(tier);
+
+        // Redirect free trial users who try to access a productivity tool
+        if (tier === 'free_trial' && toolParam) {
+          router.push('/productivity');
+          return;
+        }
 
         if (tier === 'business' || tier === 'business_plus') {
           const { data: memberships } = await supabaseBrowser
@@ -522,7 +533,7 @@ function ChatContent() {
       const { data: { user } } = await supabaseBrowser.auth.getUser();
       const { data: newSession } = await supabaseBrowser
         .from('chat_sessions')
-        .insert({ user_id: user?.id, title: (currentInput || "Visual aid request").substring(0, 60) || "New Conversation", team_id: selectedTeamId, device_id: selectedDeviceId })
+        .insert({ user_id: user?.id, title: (currentInput || "Visual aid request").substring(0, 60) || "New Conversation", team_id: selectedTeamId, device_id: selectedDeviceId, productivity_tool: toolParam || null })
         .select('id').single();
 
       currentSessionId = newSession?.id || null;
@@ -583,6 +594,7 @@ function ChatContent() {
       if (options?.forceVisualPrompt) payload.generateVisualPrompt = options.forceVisualPrompt;
       if (injectedDiagnosticContext) payload.diagnosticContext = injectedDiagnosticContext;
       if (injectedDeviceContext) payload.deviceContext = injectedDeviceContext;
+      if (toolParam) payload.productivityTool = toolParam;
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -686,62 +698,55 @@ function ChatContent() {
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen bg-background flex-col">
-      {/* Top Navigation */}
-      <nav className="border-b border-white/[0.07] bg-[#0A0F1E]/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between sticky top-0 z-50 flex-shrink-0">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center text-white text-lg shadow-md">🔧</div>
-            <span className="font-sora font-bold text-lg text-slate-50">MyTech<span className="text-blue-400">Fix</span></span>
-          </Link>
-          <div className="hidden sm:flex items-center gap-5 pl-4 border-l border-white/[0.07]">
-            <Link href="/" className="text-sm text-slate-400 hover:text-slate-100 transition-colors">Home</Link>
-            <Link href="/dashboard" className="text-sm text-slate-400 hover:text-slate-100 transition-colors">Dashboard</Link>
-            <Link href="/history" className="text-sm text-slate-400 hover:text-slate-100 transition-colors">History</Link>
-          </div>
+    <div className="flex h-full bg-background flex-col">
+      {/* Session controls bar */}
+      <div className="border-b border-white/[0.07] bg-[#0A0F1E]/80 backdrop-blur-xl px-4 py-2 flex items-center justify-end gap-3 flex-shrink-0">
+        {productivityTool && <ProductivityModeBadge tool={productivityTool} />}
+        {sessionId && (
+          <>
+            <Button
+              variant="outline" size="sm" onClick={handleToggleResolved}
+              className={`gap-1.5 text-xs hidden sm:flex transition-all ${isResolved ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'border-white/10 hover:bg-white/5'}`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {isResolved ? 'Resolved' : 'Mark Resolved'}
+            </Button>
+            <Button
+              variant="outline" size="sm" onClick={startNewChat}
+              className="gap-1.5 border-white/10 hover:bg-white/5 text-xs hidden sm:flex"
+            >
+              <MessageSquarePlus className="h-3.5 w-3.5" /> New Chat
+            </Button>
+          </>
+        )}
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/[0.07]">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          <span className="text-emerald-400 font-medium text-xs tracking-wide">LIVE</span>
         </div>
-
-        <div className="flex items-center gap-3">
-          {sessionId && (
-            <>
-              <Button
-                variant="outline" size="sm" onClick={handleToggleResolved}
-                className={`gap-1.5 text-xs hidden sm:flex transition-all ${isResolved ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'border-white/10 hover:bg-white/5'}`}
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                {isResolved ? 'Resolved' : 'Mark Resolved'}
-              </Button>
-              <Button
-                variant="outline" size="sm" onClick={startNewChat}
-                className="gap-1.5 border-white/10 hover:bg-white/5 text-xs hidden sm:flex"
-              >
-                <MessageSquarePlus className="h-3.5 w-3.5" /> New Chat
-              </Button>
-            </>
-          )}
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/[0.07]">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-emerald-400 font-medium text-xs tracking-wide">LIVE</span>
-          </div>
-        </div>
-      </nav>
+      </div>
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left sidebar — Quick Fixes + Team Context + Prompt Packs */}
         <div className="w-72 border-r border-white/10 bg-card/60 hidden lg:flex flex-col overflow-hidden">
           <div className="px-6 pt-6 pb-2 flex-shrink-0">
-            <div className="text-sm text-muted-foreground tracking-wide">Quick Fixes</div>
+            <div className="text-sm text-muted-foreground tracking-wide">
+              {productivityTool ? productivityTool.label : 'Quick Fixes'}
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6">
             <div className="space-y-2">
-              {quickFixes.map((fix, i) => (
-                <Button key={i} variant="ghost"
-                  className="w-full justify-start h-auto py-3 px-4 text-left hover:bg-white/5 border border-transparent hover:border-white/10"
-                  onClick={() => sendQuickFix(fix.prompt)}
-                >
-                  {fix.label}
-                </Button>
-              ))}
+              {productivityTool ? (
+                <ProductivityExamples tool={productivityTool} onSelect={sendQuickFix} disabled={isLoading} />
+              ) : (
+                quickFixes.map((fix, i) => (
+                  <Button key={i} variant="ghost"
+                    className="w-full justify-start h-auto py-3 px-4 text-left hover:bg-white/5 border border-transparent hover:border-white/10"
+                    onClick={() => sendQuickFix(fix.prompt)}
+                  >
+                    {fix.label}
+                  </Button>
+                ))
+              )}
             </div>
 
             {userTeams.length > 0 && (
@@ -920,18 +925,31 @@ function ChatContent() {
               </div>
             )}
 
-            {/* Mobile Quick Fix chips */}
+            {/* Mobile Quick Fix chips — productivity examples when in tool mode */}
             <div className="lg:hidden overflow-x-auto flex gap-2 mb-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {quickFixes.map((fix, i) => (
-                <button
-                  key={i}
-                  onClick={() => sendQuickFix(fix.prompt)}
-                  disabled={isLoading}
-                  className="flex-shrink-0 px-3 py-1.5 text-xs border border-white/10 rounded-full bg-card/60 hover:bg-white/5 whitespace-nowrap text-muted-foreground hover:text-foreground transition disabled:opacity-40"
-                >
-                  {fix.label}
-                </button>
-              ))}
+              {productivityTool ? (
+                productivityTool.examples.map((ex, i) => (
+                  <button
+                    key={i}
+                    onClick={() => sendQuickFix(ex)}
+                    disabled={isLoading}
+                    className="flex-shrink-0 px-3 py-1.5 text-xs border border-white/10 rounded-full bg-card/60 hover:bg-white/5 whitespace-nowrap text-muted-foreground hover:text-foreground transition disabled:opacity-40"
+                  >
+                    {ex.length > 35 ? ex.substring(0, 35) + '…' : ex}
+                  </button>
+                ))
+              ) : (
+                quickFixes.map((fix, i) => (
+                  <button
+                    key={i}
+                    onClick={() => sendQuickFix(fix.prompt)}
+                    disabled={isLoading}
+                    className="flex-shrink-0 px-3 py-1.5 text-xs border border-white/10 rounded-full bg-card/60 hover:bg-white/5 whitespace-nowrap text-muted-foreground hover:text-foreground transition disabled:opacity-40"
+                  >
+                    {fix.label}
+                  </button>
+                ))
+              )}
             </div>
 
             {/* Capabilities hint + credits hint */}
@@ -967,7 +985,7 @@ function ChatContent() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !isLoading && sendMessage()}
-                placeholder={isLoading ? "Waiting for response…" : "Describe issue, paste screenshot (Ctrl+V), or tap mic…"}
+                placeholder={isLoading ? "Waiting for response…" : productivityTool ? productivityTool.placeholder : "Describe issue, paste screenshot (Ctrl+V), or tap mic…"}
                 disabled={isLoading}
                 className="flex-1 bg-background border-white/10 disabled:opacity-60"
               />

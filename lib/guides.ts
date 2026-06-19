@@ -6,6 +6,7 @@ export interface Guide {
   category: string;
   href: string;
   keywords: string[];
+  type?: 'fix' | 'setup' | 'productivity';
 }
 
 export const guides: Guide[] = [
@@ -297,6 +298,93 @@ export const guides: Guide[] = [
     category: 'Phone & Tablet',
     href: '/fix/phone-tablet/iphone/storage-full-error',
     keywords: ['iphone', 'storage', 'full', 'space'],
+  },
+
+  // Setup Guides — WiFi & Networking
+  {
+    title: 'How to Set Up an Eero 6 Mesh Network',
+    category: 'Setup Guides',
+    href: '/setup/eero-6-mesh-network',
+    keywords: ['eero', 'setup', 'mesh', 'install', 'wifi'],
+    type: 'setup',
+  },
+  {
+    title: 'How to Set Up a Netgear Orbi Mesh Network',
+    category: 'Setup Guides',
+    href: '/setup/netgear-orbi-mesh-network',
+    keywords: ['orbi', 'netgear', 'setup', 'mesh', 'install', 'wifi'],
+    type: 'setup',
+  },
+  {
+    title: 'How to Set Up a Nest Thermostat with Google Home',
+    category: 'Setup Guides',
+    href: '/setup/nest-thermostat-with-google-home',
+    keywords: ['nest', 'thermostat', 'setup', 'install', 'google home'],
+    type: 'setup',
+  },
+  {
+    title: 'How to Set Up a Ring Doorbell with Alexa',
+    category: 'Setup Guides',
+    href: '/setup/ring-doorbell-with-alexa',
+    keywords: ['ring', 'doorbell', 'setup', 'install', 'alexa'],
+    type: 'setup',
+  },
+
+  // Setup Guides — Smart Home
+  {
+    title: 'Philips Hue Starter Kit Setup',
+    category: 'Smart Home',
+    href: '/setup/philips-hue-starter-kit',
+    keywords: ['philips', 'hue', 'setup', 'install', 'starter kit', 'bridge', 'bulb'],
+    type: 'setup',
+  },
+  {
+    title: 'Ecobee Thermostat Setup',
+    category: 'Smart Home',
+    href: '/setup/ecobee-thermostat',
+    keywords: ['ecobee', 'thermostat', 'setup', 'install', 'hvac', 'smart thermostat'],
+    type: 'setup',
+  },
+
+  // Setup Guides — WiFi & Networking (batch 2)
+  {
+    title: 'TP-Link Deco Mesh Setup',
+    category: 'WiFi & Networking',
+    href: '/setup/tp-link-deco-mesh',
+    keywords: ['tp-link', 'deco', 'setup', 'mesh', 'install', 'wifi'],
+    type: 'setup',
+  },
+
+  // Setup Guides — Security Cameras
+  {
+    title: 'Arlo Camera System Setup',
+    category: 'Security Cameras',
+    href: '/setup/arlo-camera-system',
+    keywords: ['arlo', 'camera', 'setup', 'install', 'security camera', 'base station'],
+    type: 'setup',
+  },
+
+  // Productivity tools
+  {
+    title: 'Excel Formula Help',
+    category: 'Productivity',
+    href: '/productivity/excel-formula-help',
+    keywords: ['excel', 'formula', 'spreadsheet', 'vlookup', 'pivot table', 'sumif'],
+    type: 'productivity',
+  },
+  {
+    title: 'Word Document Help',
+    category: 'Productivity',
+    href: '/productivity/word-document-help',
+    keywords: ['word', 'document', 'formatting', 'styles', 'mail merge', 'table of contents'],
+    type: 'productivity',
+  },
+  {
+    title: 'New Device Setup Help',
+    category: 'Productivity',
+    href: '/productivity/new-device-setup-help',
+    keywords: ['device', 'setup', 'new phone', 'laptop', 'printer', 'iphone', 'android', 'windows'],
+    type: 'productivity',
   },
 
   // Security Cameras

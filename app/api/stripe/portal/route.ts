@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { createClient } from '@supabase/supabase-js';
 
-// Use service role for admin access to profiles
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -10,17 +10,19 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await req.json();
+    // Verify the caller is authenticated and use their session identity —
+    // never trust a userId from the request body.
+    const supabase = await createSupabaseServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the Stripe customer ID from the user's profile
     const { data: profile, error } = await supabaseAdmin
       .from('profiles')
       .select('stripe_customer_id')
-      .eq('id', userId)
+      .eq('id', user.id)
       .single();
 
     if (error || !profile?.stripe_customer_id) {
@@ -30,7 +32,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create a Stripe Billing Portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
       return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/account`,

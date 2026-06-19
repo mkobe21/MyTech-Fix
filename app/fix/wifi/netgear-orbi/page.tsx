@@ -106,6 +106,18 @@ export default function NetgearOrbiHubPage() {
           </Link>
         </div>
 
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4 mb-8 flex items-center justify-between gap-4">
+          <p className="text-sm text-slate-300">
+            <span className="font-semibold">New to Orbi?</span> See our complete setup guide — router to satellite to verified coverage.
+          </p>
+          <Link
+            href="/setup/netgear-orbi-mesh-network"
+            className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 whitespace-nowrap transition-colors"
+          >
+            Setup guide →
+          </Link>
+        </div>
+
         <FinalCTA
           heading="Still having trouble with your Orbi?"
           body="Our AI runs a live diagnostic on your network and gives you a fix specific to your setup — no account required to start."

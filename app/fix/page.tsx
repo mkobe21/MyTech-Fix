@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Breadcrumb from '@/components/seo/Breadcrumb';
 import CategoryCard from '@/components/seo/CategoryCard';
@@ -111,6 +112,18 @@ export default function FixHubPage() {
             by our AI.
           </p>
         </header>
+
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4 mb-6 flex items-center justify-between gap-4">
+          <p className="text-sm text-slate-300">
+            <span className="font-semibold">Just bought a new device?</span> We have step-by-step setup guides for mesh routers, Nest Thermostats, Ring Doorbells, and more.
+          </p>
+          <Link
+            href="/setup"
+            className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 whitespace-nowrap transition-colors"
+          >
+            Setup Guides →
+          </Link>
+        </div>
 
         <GuidesSearch />
 

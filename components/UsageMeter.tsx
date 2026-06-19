@@ -15,12 +15,14 @@ const tierLabels: Record<string, string> = {
   free_trial: 'Free Trial',
   single_use: 'Single Use',
   home: 'Home Plan',
+  home_pro: 'Home Pro',
   business: 'Small Business',
+  business_plus: 'Business Plus',
 };
 
 export default function UsageMeter({ tier, used, remaining, className }: UsageMeterProps) {
   const label = tierLabels[tier] || 'Free Trial';
-  const isLow = remaining <= 2 && tier !== 'business';
+  const isLow = remaining <= 2 && tier !== 'business' && tier !== 'business_plus' && tier !== 'home_pro';
 
   return (
     <Card className={`border-blue-500/20 bg-blue-500/5 ${className || ''}`}>

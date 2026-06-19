@@ -2,28 +2,27 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Home, Menu, X } from 'lucide-react';
-import UserMenu from './UserMenu';
+import { Home, Menu, X, ArrowRight } from 'lucide-react';
 import { useAuth } from './AuthProvider';
-
-const AUTH_LINKS = [
-  { href: '/chat', label: 'Chat' },
-  { href: '/dashboard', label: 'Dashboard' },
-];
+import { useInAppShell } from './layout/AppShell';
 
 const PUBLIC_LINKS = [
   { href: '/how-it-works', label: 'How it Works' },
-  { href: '/what-we-fix', label: 'What We Fix' },
-  { href: '/fix', label: 'Guides' },
-  { href: '/pricing', label: 'Pricing' },
+  { href: '/what-we-fix',  label: 'What We Fix'  },
+  { href: '/fix',          label: 'Guides'        },
+  { href: '/setup',        label: 'Setup Guides'  },
+  { href: '/docs',         label: 'Docs'          },
+  { href: '/productivity', label: 'Productivity'  },
+  { href: '/pricing',      label: 'Pricing'       },
 ];
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
-
-  const visibleLinks = user ? [...AUTH_LINKS, ...PUBLIC_LINKS] : PUBLIC_LINKS;
+  const inAppShell = useInAppShell();
   const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  if (inAppShell) return null;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#0A0F1E]/80 backdrop-blur-xl">
@@ -44,7 +43,7 @@ export default function Navbar() {
             <Home className="w-3.5 h-3.5" />
             Home
           </Link>
-          {visibleLinks.map((item) => (
+          {PUBLIC_LINKS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -57,8 +56,15 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          <UserMenu />
-          {!user && (
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition-colors shadow-md shadow-blue-900/40"
+            >
+              Go to app
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          ) : (
             <Link
               href="/chat"
               className="hidden md:inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition-colors shadow-md shadow-blue-900/40"
@@ -90,7 +96,7 @@ export default function Navbar() {
               <Home className="w-4 h-4" />
               Home
             </Link>
-            {visibleLinks.map((item) => (
+            {PUBLIC_LINKS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -100,7 +106,15 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
-            {!user && (
+            {user ? (
+              <Link
+                href="/dashboard"
+                onClick={closeMobileMenu}
+                className="mt-3 flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition-colors"
+              >
+                Go to app <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
               <Link
                 href="/chat"
                 onClick={closeMobileMenu}

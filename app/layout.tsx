@@ -6,6 +6,7 @@ import { AuthProvider } from '@/components/AuthProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ThemeSync } from '@/components/ThemeSync';
 import ConditionalFooter from '@/components/ConditionalFooter';
+import ConditionalAppShell from '@/components/ConditionalAppShell';
 import { MotionConfig } from 'framer-motion';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -33,7 +34,9 @@ export default function RootLayout({
           <AuthProvider>
             <ThemeSync />
             <MotionConfig reducedMotion="user">
-              {children}
+              <ConditionalAppShell>
+                {children}
+              </ConditionalAppShell>
               <ConditionalFooter />
             </MotionConfig>
           </AuthProvider>

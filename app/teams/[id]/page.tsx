@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { UserPlus, Trash2, Users, BarChart3, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import Navbar from '@/components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 
@@ -186,7 +185,6 @@ export default function TeamDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="h-6 w-64 bg-white/10 rounded animate-pulse mb-6" />
           <div className="grid lg:grid-cols-3 gap-6">
@@ -200,7 +198,6 @@ export default function TeamDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="max-w-5xl mx-auto px-6 py-8">
 
         {/* Breadcrumb + header */}

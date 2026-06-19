@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { getPromptStyle, getTierLabel, getLimit, pickHighestTier, getUserTierAndUsage, type Tier } from '@/lib/tiers';
 import { generateImage } from '@/lib/image-generation';
 import { formatDiagnosticReportForChat } from '@/lib/diagnostics';
+import { PRODUCTIVITY_PROMPTS, type ProductivityTool } from '@/lib/productivity-prompts';
 
 // =============================================
 // TIER-AWARE SYSTEM PROMPT (now uses centralized tier config)
@@ -76,7 +77,7 @@ You will be told the user's current tier. Adjust your response depth accordingly
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    const { message, imageUrl, history, generateVisualPrompt, diagnosticContext, deviceContext } = await request.json();
+    const { message, imageUrl, history, generateVisualPrompt, diagnosticContext, deviceContext, productivityTool } = await request.json();
 
     // Create Supabase server client
     const cookieStore = await cookies();
@@ -266,6 +267,11 @@ Be direct and accurate. Example good answer: "You have 12 chats and 7 image cred
       if (deviceContext.type) parts.push(`Device type: ${deviceContext.type}`);
       if (deviceContext.location) parts.push(`Location: ${deviceContext.location}`);
       systemPrompt = systemPrompt + `\n\n### Device Being Troubleshot\nThe user is troubleshooting a specific device from their business inventory. Tailor your guidance to this device context and reference it naturally in your responses:\n${parts.join('\n')}`;
+    }
+
+    // === PRODUCTIVITY TOOL CONTEXT INJECTION ===
+    if (productivityTool && typeof productivityTool === 'string' && PRODUCTIVITY_PROMPTS[productivityTool as ProductivityTool]) {
+      systemPrompt = systemPrompt + `\n\n${PRODUCTIVITY_PROMPTS[productivityTool as ProductivityTool]}`;
     }
 
     // Prepare messages for Grok

@@ -161,7 +161,57 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      // Add more cases (invoice.paid for renewals, etc.) as needed
+      case 'invoice.paid': {
+        const invoice = event.data.object as Stripe.Invoice;
+
+        // Only reset usage on recurring renewals — the initial charge is already
+        // handled by checkout.session.completed, so double-processing is skipped.
+        if (invoice.billing_reason !== 'subscription_cycle') break;
+
+        const customerId = invoice.customer as string;
+        if (!customerId) break;
+
+        const { data: profile } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+
+        if (!profile) {
+          console.warn(`[Stripe] invoice.paid: no profile for customer ${customerId}`);
+          break;
+        }
+
+        const now = new Date().toISOString();
+
+        await supabaseAdmin
+          .from('profiles')
+          .update({
+            sessions_used: 0,
+            images_used: 0,
+            diagnostics_used: 0,
+            image_reset_date: now,
+            diagnostic_reset_date: now,
+            updated_at: now,
+          })
+          .eq('id', profile.id);
+
+        await supabaseAdmin
+          .from('user_tiers')
+          .upsert({
+            user_id: profile.id,
+            sessions_used: 0,
+            images_used: 0,
+            diagnostics_used: 0,
+            image_reset_date: now,
+            diagnostic_reset_date: now,
+            updated_at: now,
+          });
+
+        console.log(`[Stripe] Renewal reset for user ${profile.id} (customer ${customerId})`);
+        break;
+      }
+
       default:
         console.log(`Unhandled relevant event: ${event.type}`);
     }
